@@ -8,6 +8,8 @@ defmodule LedBlinker.LedController do
   # the next use, so there is no need to restart it automatically.
   use GenServer, restart: :temporary
 
+  @idle_timeout :timer.seconds(10)
+
   # Used as a unique process name when being registered to the process registry.
   defp via_tuple(gpio_pin) when is_number(gpio_pin) do
     LedBlinker.ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
@@ -44,7 +46,7 @@ defmodule LedBlinker.LedController do
   def init(gpio_pin) do
     # Initialize later so we can avoid blocking the caller.
     send(self(), {:initialize_state, gpio_pin})
-    {:ok, nil}
+    {:ok, nil, @idle_timeout}
   end
 
   def handle_info({:initialize_state, gpio_pin}, _) do
@@ -53,27 +55,48 @@ defmodule LedBlinker.LedController do
       %{
         gpio_pin: gpio_pin,
         switched_on: LedBlinker.Led.on?(gpio_pin)
-      }
+      },
+      @idle_timeout
     }
+  end
+
+  def handle_info(:timeout, %{gpio_pin: gpio_pin} = state) do
+    IO.puts("Stopping #{__MODULE__}:#{gpio_pin}")
+    {:stop, :normal, {state, @idle_timeout}}
   end
 
   def handle_info({:schedule_blink, pid, interval}, state) do
     schedule_blink(pid, interval)
-    {:noreply, state}
+    {:noreply, state, @idle_timeout}
   end
 
   def handle_call(:on?, _caller_pid, %{switched_on: switched_on} = state) do
-    {:reply, switched_on, state}
+    {
+      :reply,
+      switched_on,
+      state,
+      @idle_timeout
+    }
   end
 
   def handle_cast(:turn_on, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
     unless switched_on, do: LedBlinker.Led.turn_on(gpio_pin)
-    {:noreply, state |> Map.put(:switched_on, true)}
+
+    {
+      :noreply,
+      %{state | switched_on: true},
+      @idle_timeout
+    }
   end
 
   def handle_cast(:turn_off, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
     if switched_on, do: LedBlinker.Led.turn_off(gpio_pin)
-    {:noreply, state |> Map.put(:switched_on, false)}
+
+    {
+      :noreply,
+      %{state | switched_on: false},
+      @idle_timeout
+    }
   end
 
   def handle_cast(:toggle, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
@@ -81,6 +104,10 @@ defmodule LedBlinker.LedController do
       do: LedBlinker.Led.turn_off(gpio_pin),
       else: LedBlinker.Led.turn_on(gpio_pin)
 
-    {:noreply, state |> Map.put(:switched_on, !switched_on)}
+    {
+      :noreply,
+      %{state | switched_on: !switched_on},
+      @idle_timeout
+    }
   end
 end
