@@ -23,13 +23,13 @@ defmodule LedBlinker.LedController do
   def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
 
   def on?(pid) when is_pid(pid), do: GenServer.call(pid, :on?)
-  def off?(pid) when is_pid(pid), do: on?(pid) == false
+  def off?(pid), do: !on?(pid)
 
   def turn_on(pid) when is_pid(pid), do: GenServer.cast(pid, :turn_on)
   def turn_off(pid) when is_pid(pid), do: GenServer.cast(pid, :turn_off)
   def toggle(pid) when is_pid(pid), do: GenServer.cast(pid, :toggle)
 
-  def blink(pid, interval) when is_pid(pid) when is_number(interval) do
+  def blink(pid, interval \\ 500) when is_pid(pid) when is_number(interval) do
     schedule_blink(pid, interval)
   end
 
@@ -50,11 +50,14 @@ defmodule LedBlinker.LedController do
   end
 
   def handle_info({:initialize_state, gpio_pin}, _) do
+    gpio_ref = LedBlinker.Led.gpio_ref(gpio_pin)
+
     {
       :noreply,
       %{
         gpio_pin: gpio_pin,
-        switched_on: LedBlinker.Led.on?(gpio_pin)
+        gpio_ref: gpio_ref,
+        switched_on: LedBlinker.Led.on?(gpio_ref)
       },
       @idle_timeout
     }
@@ -79,8 +82,8 @@ defmodule LedBlinker.LedController do
     }
   end
 
-  def handle_cast(:turn_on, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
-    unless switched_on, do: LedBlinker.Led.turn_on(gpio_pin)
+  def handle_cast(:turn_on, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
+    unless switched_on, do: LedBlinker.Led.turn_on(gpio_ref)
 
     {
       :noreply,
@@ -89,8 +92,8 @@ defmodule LedBlinker.LedController do
     }
   end
 
-  def handle_cast(:turn_off, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
-    if switched_on, do: LedBlinker.Led.turn_off(gpio_pin)
+  def handle_cast(:turn_off, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
+    if switched_on, do: LedBlinker.Led.turn_off(gpio_ref)
 
     {
       :noreply,
@@ -99,10 +102,10 @@ defmodule LedBlinker.LedController do
     }
   end
 
-  def handle_cast(:toggle, %{gpio_pin: gpio_pin, switched_on: switched_on} = state) do
+  def handle_cast(:toggle, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
     if switched_on,
-      do: LedBlinker.Led.turn_off(gpio_pin),
-      else: LedBlinker.Led.turn_on(gpio_pin)
+      do: LedBlinker.Led.turn_off(gpio_ref),
+      else: LedBlinker.Led.turn_on(gpio_ref)
 
     {
       :noreply,
