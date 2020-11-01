@@ -11,8 +11,8 @@ defmodule LedBlinker.System do
     # Always make sure our init/1 functions run quickly.
     Supervisor.init(
       [
-        LedBlinker.ProcessRegistry,
-        LedBlinker.LedControllerCache
+        {LedBlinker.ProcessRegistry, nil},
+        {LedBlinker.LedControllerCache, nil}
       ],
       strategy: :one_for_one
     )

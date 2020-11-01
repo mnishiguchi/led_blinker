@@ -4,13 +4,21 @@ defmodule LedBlinker.LedController do
   particular LED.
   """
 
-  # https://hexdocs.pm/elixir/GenServer.html
-  use GenServer
+  # Does not restart on termination. If a process crashes, it will be started on
+  # the next use, so there is no need to restart it automatically.
+  use GenServer, restart: :temporary
+
+  # Used as a unique process name when being registered to the process registry.
+  defp via_tuple(gpio_pin) when is_number(gpio_pin) do
+    LedBlinker.ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
+  end
 
   def start_link(gpio_pin) when is_number(gpio_pin) do
-    IO.puts("Starting #{__MODULE__}")
-    GenServer.start(__MODULE__, gpio_pin)
+    IO.puts("Starting #{__MODULE__}:#{gpio_pin}")
+    GenServer.start(__MODULE__, gpio_pin, name: via_tuple(gpio_pin))
   end
+
+  def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
 
   def on?(pid) when is_pid(pid), do: GenServer.call(pid, :on?)
   def off?(pid) when is_pid(pid), do: on?(pid) == false
@@ -22,9 +30,6 @@ defmodule LedBlinker.LedController do
   def blink(pid, interval) when is_pid(pid) when is_number(interval) do
     schedule_blink(pid, interval)
   end
-
-  # This is handy when we want to stop the blinking.
-  def terminate(pid) when is_pid(pid), do: Process.exit(pid, :kill)
 
   # Toggles the switch now and schedule next.
   defp schedule_blink(pid, interval) when is_pid(pid) when is_number(interval) do

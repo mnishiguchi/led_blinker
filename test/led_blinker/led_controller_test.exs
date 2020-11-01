@@ -1,14 +1,18 @@
 defmodule LedBlinker.LedControllerTest do
   use ExUnit.Case
 
-  alias LedBlinker.LedController
+  alias LedBlinker.{LedControllerCache,LedController}
 
-  test "switching on and off" do
-    {:ok, pid} = LedController.start_link(-1)
+  setup do
+    gpio_pin = 20
+    pid = LedControllerCache.get(gpio_pin)
+    {:ok, pid: pid}
+  end
 
+  test "switching on and off", %{pid: pid} do
     LedController.turn_on(pid)
-    assert LedController.on?(pid) == true
-    assert LedController.off?(pid) == false
+    assert LedController.on?(pid)
+    refute LedController.off?(pid)
 
     LedController.turn_off(pid)
     assert LedController.off?(pid)
@@ -17,9 +21,7 @@ defmodule LedBlinker.LedControllerTest do
     assert LedController.on?(pid)
   end
 
-  test "toggle" do
-    {:ok, pid} = LedController.start_link(-1)
-
+  test "toggle", %{pid: pid} do
     LedController.turn_on(pid)
     LedController.toggle(pid)
     assert LedController.off?(pid)
@@ -28,8 +30,7 @@ defmodule LedBlinker.LedControllerTest do
     assert LedController.on?(pid)
   end
 
-  test "blinking" do
-    {:ok, pid} = LedController.start_link(-1)
+  test "blinking", %{pid: pid} do
     LedController.turn_on(pid)
     assert LedController.on?(pid)
 
