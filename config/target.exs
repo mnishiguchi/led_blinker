@@ -49,6 +49,18 @@ config :nerves_ssh,
 
 # Configure the network using vintage_net
 # See https://github.com/nerves-networking/vintage_net for more information
+wifi_ssid =
+  System.get_env("WIFI_SSID") ||
+    raise """
+    Environment variable WIFI_SSID is missing.
+    """
+
+wifi_psk =
+  System.get_env("WIFI_PSK") ||
+    raise """
+    Environment variable WIFI_PSK is missing.
+    """
+
 config :vintage_net,
   regulatory_domain: "US",
   config: [
@@ -58,7 +70,20 @@ config :vintage_net,
        type: VintageNetEthernet,
        ipv4: %{method: :dhcp}
      }},
-    {"wlan0", %{type: VintageNetWiFi}}
+    {"wlan0",
+     %{
+       type: VintageNetWiFi,
+       vintage_net_wifi: %{
+         networks: [
+           %{
+             key_mgmt: :wpa_psk,
+             ssid: wifi_ssid,
+             psk: wifi_psk
+           }
+         ]
+       },
+       ipv4: %{method: :dhcp}
+     }}
   ]
 
 config :mdns_lite,
