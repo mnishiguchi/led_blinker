@@ -15,6 +15,7 @@ defmodule LedBlinker.Application do
         # Children for all targets
         # Starts a worker by calling: LedBlinker.Worker.start_link(arg)
         # {LedBlinker.Worker, arg},
+        {LedBlinker.System, nil}
       ] ++ children(target())
 
     Supervisor.start_link(children, opts)
