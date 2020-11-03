@@ -31,11 +31,15 @@ defmodule LedBlinker.LedControllerTest do
   end
 
   test "blinking", %{pid: pid} do
+    # Initially ON.
     LedController.turn_on(pid)
-    assert LedController.on?(pid)
 
+    # Start blinking.
     LedController.blink(pid, 500)
-    :timer.sleep(499)
+
+    # This is a magic number to simulate latency.
+    :timer.sleep(600)
+
     assert LedController.off?(pid)
     :timer.sleep(500)
     assert LedController.on?(pid)
