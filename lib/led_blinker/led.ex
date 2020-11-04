@@ -33,15 +33,12 @@ defmodule LedBlinker.Led do
 
   """
   def on?(gpio_ref) when is_reference(gpio_ref) do
-    Task.async(fn ->
-      IO.puts("Checking the LED state")
+    IO.puts("Checking the LED state")
 
-      case Circuits.GPIO.read(gpio_ref) do
-        @gpio_on -> true
-        @gpio_off -> false
-      end
-    end)
-    |> Task.await()
+    case Circuits.GPIO.read(gpio_ref) do
+      @gpio_on -> true
+      @gpio_off -> false
+    end
   end
 
   def off?(gpio_ref), do: !on?(gpio_ref)
@@ -56,10 +53,8 @@ defmodule LedBlinker.Led do
 
   """
   def turn_on(gpio_ref) when is_reference(gpio_ref) do
-    Task.start_link(fn ->
-      IO.puts("Turning on the LED async")
-      Circuits.GPIO.write(gpio_ref, @gpio_on)
-    end)
+    IO.puts("Turning on the LED")
+    Circuits.GPIO.write(gpio_ref, @gpio_on)
   end
 
   @doc """
@@ -72,9 +67,7 @@ defmodule LedBlinker.Led do
 
   """
   def turn_off(gpio_ref) when is_reference(gpio_ref) do
-    Task.start_link(fn ->
-      IO.puts("Turning off the LED async")
-      Circuits.GPIO.write(gpio_ref, @gpio_off)
-    end)
+    IO.puts("Turning off the LED")
+    Circuits.GPIO.write(gpio_ref, @gpio_off)
   end
 end
