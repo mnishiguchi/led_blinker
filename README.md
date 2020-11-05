@@ -1,6 +1,15 @@
 # LedBlinker
 
-**TODO: Add description**
+## Usage
+
+```ex
+gpio_pin = 20
+LedBlinker.turn_on(gpio_pin)
+LedBlinker.turn_off(gpio_pin)
+LedBlinker.toggle(gpio_pin)
+LedBlinker.blink(gpio_pin, :timer.seconds(1))
+LedBlinker.stop(gpio_pin)
+```
 
 ## Targets
 
