@@ -10,9 +10,11 @@ defmodule LedBlinker.System do
     # Always make sure our init/1 functions run quickly.
     Supervisor.init(
       [
+        {Task.Supervisor, name: LedBlinker.TaskSupervisor},
         {LedBlinker.ProcessRegistry, nil},
         {LedBlinker.LedControllerCache, nil},
-        {LedBlinker.BlinkSupervisor, nil}
+        {LedBlinker.BlinkSupervisor, nil},
+        {LedBlinker.SPI.PotentiometerSupervisor, nil}
       ],
       strategy: :one_for_one
     )

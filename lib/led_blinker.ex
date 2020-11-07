@@ -13,8 +13,11 @@ defmodule LedBlinker do
 
       LedBlinker.brightness(12, 80)
 
+      LedBlinker.potentiometer(12)
+
   """
 
+  require Logger
   alias LedBlinker.{LedControllerCache, LedController}
 
   def turn_on(gpio_pin) do
@@ -39,19 +42,32 @@ defmodule LedBlinker do
           frequency: frequency,
           duty_cycle: duty_cycle,
           # Do not omit the module since the lambdas are called outside this module.
-          turn_on_fn: fn -> LedBlinker.turn_on(gpio_pin) end,
-          turn_off_fn: fn -> LedBlinker.turn_off(gpio_pin) end
+          turn_on_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_on() end,
+          turn_off_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_off() end
         })
     end
   end
 
   def stop_blink(gpio_pin) do
     LedBlinker.PwmBlinkScheduler.stop(gpio_pin)
-    turn_off(gpio_pin)
+    LedBlinker.turn_off(gpio_pin)
   end
 
-  def brightness(gpio_pin, percentage) do
+  def brightness(gpio_pin, percentage) when percentage in 0..100 do
     # 100Hz (period duration: ~10ms) is fast enough.
-    blink(gpio_pin, 100, percentage)
+    LedBlinker.blink(gpio_pin, 100, percentage)
+  end
+
+  def potentiometer(gpio_pin) do
+    unless LedBlinker.SPI.Potentiometer.whereis(gpio_pin) do
+      {:ok, _pid} =
+        LedBlinker.SPI.PotentiometerSupervisor.start_child(%{
+          gpio_pin: gpio_pin,
+          on_scan_fn: fn percentage ->
+            Logger.info("#{round(percentage)}")
+            LedBlinker.brightness(gpio_pin, round(percentage))
+          end
+        })
+    end
   end
 end
