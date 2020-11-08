@@ -9,9 +9,41 @@ defmodule LedBlinker.ProcessRegistry do
 
   @doc """
   Returns a standardized via-tuple for this registry.
+
+  Examples:
+
+      ProcessRegistry.via_tuple({LedController, 20})
+      # {:via, Registry, {LedBlinker.ProcessRegistry, {LedBlinker.LedController, 20}}}
+
   """
-  def via_tuple(key) do
+  def via_tuple(key) when is_tuple(key) do
     {:via, Registry, {__MODULE__, key}}
+  end
+
+  @doc """
+  Returns a PID or :undefined.
+
+  Examples:
+
+      ProcessRegistry.whereis_name({LedController, 20})
+      # #PID<0.235.0>
+
+  """
+  def whereis_name(key) when is_tuple(key) do
+    Registry.whereis_name({__MODULE__, key})
+  end
+
+  @doc """
+  Returns a PID or :undefined.
+
+  Examples:
+
+      LedController.via_tuple(20) |> ProcessRegistry.whereis_via_tuple()
+      # #PID<0.235.0>
+
+  """
+  def whereis_via_tuple({:via, _, {_, key}}) when is_tuple(key) do
+    whereis_name(key)
   end
 
   @doc """

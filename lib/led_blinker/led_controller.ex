@@ -12,7 +12,7 @@ defmodule LedBlinker.LedController do
   @idle_timeout :timer.minutes(10)
 
   # Used as a unique process name.
-  defp via_tuple(gpio_pin) when is_number(gpio_pin) do
+  def via_tuple(gpio_pin) when is_number(gpio_pin) do
     LedBlinker.ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
   end
 
