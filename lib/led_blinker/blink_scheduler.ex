@@ -18,7 +18,7 @@ defmodule LedBlinker.BlinkScheduler do
 
   # Used as a unique process name when being registered to the process registry.
   defp via_tuple(blink_fn) when is_function(blink_fn) do
-    LedBlinker.ProcessRegistry.via_tuple({__MODULE__, blink_fn})
+    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, blink_fn)
   end
 
   def start_link([interval, blink_fn]) when is_number(interval) when is_function(blink_fn) do

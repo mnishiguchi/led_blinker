@@ -12,12 +12,12 @@ defmodule LedBlinker.ProcessRegistry do
 
   Examples:
 
-      ProcessRegistry.via_tuple({LedController, 20})
+      ProcessRegistry.via_tuple(LedController, 20)
       # {:via, Registry, {LedBlinker.ProcessRegistry, {LedBlinker.LedController, 20}}}
 
   """
-  def via_tuple(key) when is_tuple(key) do
-    {:via, Registry, {__MODULE__, key}}
+  def via_tuple(module_name, identifier) when is_atom(module_name) do
+    {:via, Registry, {__MODULE__, {module_name, identifier}}}
   end
 
   @doc """
@@ -37,6 +37,12 @@ defmodule LedBlinker.ProcessRegistry do
   Returns a PID or :undefined.
 
   Examples:
+
+      LedController.via_tuple(20) |> ProcessRegistry.whereis_via_tuple()
+      # :undefined
+
+      LedController.start_link(20)
+      # {:ok, #PID<0.235.0>}
 
       LedController.via_tuple(20) |> ProcessRegistry.whereis_via_tuple()
       # #PID<0.235.0>

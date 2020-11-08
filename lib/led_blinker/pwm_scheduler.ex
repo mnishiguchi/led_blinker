@@ -24,7 +24,7 @@ defmodule LedBlinker.PwmScheduler do
 
   # Used as a unique process name.
   defp via_tuple(frequency, duty_cycle) when is_number(frequency) when is_number(duty_cycle) do
-    LedBlinker.ProcessRegistry.via_tuple({__MODULE__, {frequency, duty_cycle}})
+    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, {frequency, duty_cycle})
   end
 
   def start_link(%{} = args)
