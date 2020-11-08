@@ -4,7 +4,7 @@ defmodule LedBlinker.BlinkScheduler do
 
   Examples:
 
-      {:ok, pid} = LedBlinker.BlinkScheduler.start_link({500, fn -> IO.puts("Hello") end})
+      {:ok, pid} = LedBlinker.BlinkScheduler.start_link([500, fn -> IO.puts("Hello") end])
       # Hello
       # Hello
       # Hello
@@ -21,7 +21,7 @@ defmodule LedBlinker.BlinkScheduler do
     LedBlinker.ProcessRegistry.via_tuple({__MODULE__, blink_fn})
   end
 
-  def start_link({interval, blink_fn}) when is_number(interval) when is_function(blink_fn) do
+  def start_link([interval, blink_fn]) when is_number(interval) when is_function(blink_fn) do
     IO.puts("Starting #{__MODULE__}")
 
     GenServer.start_link(
@@ -33,18 +33,16 @@ defmodule LedBlinker.BlinkScheduler do
 
   def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
 
-  # ---
-  # Callbacks
-  # ---
-
+  @impl true
   def init(initial_state) do
-    Process.send_after(self(), :tick, initial_state.interval)
+    send(self(), :tick)
     {:ok, initial_state}
   end
 
   # Fire now and schedule next.
+  @impl true
   def handle_info(:tick, %{interval: interval, blink_fn: blink_fn} = state) do
-    {:ok, _pid} = Task.start_link(blink_fn)
+    blink_fn.()
     Process.send_after(self(), :tick, interval)
     {:noreply, state}
   end

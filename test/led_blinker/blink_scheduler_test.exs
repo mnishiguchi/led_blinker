@@ -5,16 +5,17 @@ defmodule LedBlinker.BlinkSchedulerTest do
   alias LedBlinker.BlinkScheduler
 
   test "blinking" do
-    assert capture_io(fn -> run_scheduler(2000) end) == """
+    assert capture_io(fn -> run_scheduler() end) == """
            Starting Elixir.LedBlinker.BlinkScheduler
+           Hello
            Hello
            Hello
            Hello
            """
   end
 
-  defp run_scheduler(milli_seconds) do
-    BlinkScheduler.start_link({500, fn -> IO.puts("Hello") end})
-    :timer.sleep(milli_seconds)
+  defp run_scheduler() do
+    BlinkScheduler.start_link([500, fn -> IO.puts("Hello") end])
+    :timer.sleep(2000)
   end
 end

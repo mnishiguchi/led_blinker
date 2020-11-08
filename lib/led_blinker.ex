@@ -9,6 +9,8 @@ defmodule LedBlinker do
       LedBlinker.toggle(20)
       LedBlinker.blink(20, 1000)
       LedBlinker.stop(20)
+      LedBlinker.pwm(20, frequency: 5000, duty_cycle: 80)
+      LedBlinker.stop(20)
 
   """
 
@@ -28,6 +30,11 @@ defmodule LedBlinker do
 
   def blink(gpio_pin, interval \\ 500) do
     LedControllerCache.get(gpio_pin) |> LedController.blink(interval)
+  end
+
+  def pwm(gpio_pin, frequency: frequency, duty_cycle: duty_cycle) do
+    LedControllerCache.get(gpio_pin)
+    |> LedController.pwm(frequency: frequency, duty_cycle: duty_cycle)
   end
 
   def stop(gpio_pin) do

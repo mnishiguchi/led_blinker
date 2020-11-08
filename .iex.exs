@@ -4,3 +4,4 @@ alias Elixir.LedBlinker.LedControllerCache
 alias Elixir.LedBlinker.LedController
 alias Elixir.LedBlinker.BlinkScheduler
 alias Elixir.LedBlinker.Led
+alias Elixir.LedBlinker.PwmScheduler

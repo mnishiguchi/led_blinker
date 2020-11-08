@@ -24,7 +24,7 @@ defmodule LedBlinker.Led do
   end
 
   @doc """
-  Returns true is the LED is currently switched on; else false.
+  Returns true if the LED is currently switched on; else false.
 
   ## Examples
 
