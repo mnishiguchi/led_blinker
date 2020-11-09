@@ -31,14 +31,14 @@ defmodule LedBlinker.LedController do
   def turn_off(pid) when is_pid(pid), do: GenServer.cast(pid, :turn_off)
   def toggle(pid) when is_pid(pid), do: GenServer.cast(pid, :toggle)
 
-  def blink(pid, interval \\ 500) when is_pid(pid) when is_number(interval) do
+  def blink(pid, interval \\ 500) when is_pid(pid) and is_number(interval) do
     GenServer.cast(pid, {:blink, interval})
   end
 
   def pwm(pid, frequency: frequency, duty_cycle: duty_cycle)
-      when is_pid(pid)
-      when frequency in 100..50_000
-      when duty_cycle in 0..100 do
+      when is_pid(pid) and
+             frequency in 100..50_000 and
+             duty_cycle in 0..100 do
     GenServer.cast(pid, {:pwm, frequency, duty_cycle})
   end
 

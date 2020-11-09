@@ -21,7 +21,7 @@ defmodule LedBlinker.BlinkScheduler do
     LedBlinker.ProcessRegistry.via_tuple(__MODULE__, blink_fn)
   end
 
-  def start_link([interval, blink_fn]) when is_number(interval) when is_function(blink_fn) do
+  def start_link([interval, blink_fn]) when is_number(interval) and is_function(blink_fn) do
     IO.puts("Starting #{__MODULE__}")
 
     GenServer.start_link(

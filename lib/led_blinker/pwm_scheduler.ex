@@ -23,7 +23,7 @@ defmodule LedBlinker.PwmScheduler do
   use GenServer
 
   # Used as a unique process name.
-  defp via_tuple(frequency, duty_cycle) when is_number(frequency) when is_number(duty_cycle) do
+  defp via_tuple(frequency, duty_cycle) when is_number(frequency) and is_number(duty_cycle) do
     LedBlinker.ProcessRegistry.via_tuple(__MODULE__, {frequency, duty_cycle})
   end
 
@@ -35,10 +35,10 @@ defmodule LedBlinker.PwmScheduler do
           turn_off_fn: turn_off_fn
         } = args
       )
-      when frequency in 200..50_000
-      when duty_cycle in 0..100
-      when is_function(turn_on_fn)
-      when is_function(turn_off_fn) do
+      when frequency in 200..50_000 and
+             duty_cycle in 0..100 and
+             is_function(turn_on_fn) and
+             is_function(turn_off_fn) do
     IO.puts("Starting #{__MODULE__}:#{frequency}Hz:#{duty_cycle}%")
 
     GenServer.start_link(
