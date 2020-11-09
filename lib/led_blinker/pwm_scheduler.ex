@@ -27,28 +27,49 @@ defmodule LedBlinker.PwmScheduler do
     LedBlinker.ProcessRegistry.via_tuple(__MODULE__, {frequency, duty_cycle})
   end
 
-  def start_link(%{} = args)
-      when args.frequency in 100..50_000
-      when args.duty_cycle in 0..100
-      when is_function(args.turn_on_fn)
-      when is_function(args.turn_off_fn) do
-    IO.puts("Starting #{__MODULE__}:#{args.frequency}Hz:#{args.duty_cycle}%")
+  def start_link(
+        %{
+          frequency: frequency,
+          duty_cycle: duty_cycle,
+          turn_on_fn: turn_on_fn,
+          turn_off_fn: turn_off_fn
+        } = args
+      )
+      when frequency in 200..50_000
+      when duty_cycle in 0..100
+      when is_function(turn_on_fn)
+      when is_function(turn_off_fn) do
+    IO.puts("Starting #{__MODULE__}:#{frequency}Hz:#{duty_cycle}%")
 
     GenServer.start_link(
       __MODULE__,
       args,
-      name: via_tuple(args.frequency, args.duty_cycle)
+      name: via_tuple(frequency, duty_cycle)
     )
   end
 
   def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
 
   @impl true
-  def init(%{} = args) do
-    send(self(), :turn_on)
-    period = hz_to_period(args.frequency)
-    on_time = round(period * (args.duty_cycle / 100))
+  def init(
+        %{
+          frequency: frequency,
+          duty_cycle: duty_cycle,
+          turn_on_fn: turn_on_fn,
+          turn_off_fn: turn_off_fn
+        } = args
+      ) do
+    period = hz_to_period(frequency)
+    on_time = round(period * (duty_cycle / 100))
     off_time = period - on_time
+
+    # Determine initial action. Do not generate pulse when on/off time is 0.
+    cond do
+      on_time == 0 -> turn_off_fn.()
+      off_time == 0 -> turn_on_fn.()
+      true -> send(self(), :turn_on)
+    end
+
     {:ok, Map.merge(args, %{period: period, on_time: on_time, off_time: off_time})}
   end
 
