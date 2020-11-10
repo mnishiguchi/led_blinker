@@ -31,8 +31,6 @@ defmodule LedBlinker.BlinkScheduler do
     )
   end
 
-  def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
-
   @impl true
   def init(initial_state) do
     send(self(), :tick)

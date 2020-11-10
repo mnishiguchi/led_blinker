@@ -141,6 +141,7 @@ defmodule LedBlinker.LedController do
 
     {:ok, blink_pid} =
       LedBlinker.PwmScheduler.start_link(%{
+        gpio_pin: gpio_pin,
         frequency: frequency,
         duty_cycle: duty_cycle,
         turn_on_fn: fn -> GenServer.cast(via_tuple(gpio_pin), :turn_on) end,

@@ -6,6 +6,7 @@ defmodule LedBlinker.PwmScheduler do
 
       {:ok, pid} =
         LedBlinker.PwmScheduler.start_link(%{
+          gpio_pin: 19,
           frequency: 5000,
           duty_cycle: 80,
           turn_on_fn: fn -> IO.puts("1") end,
@@ -23,32 +24,28 @@ defmodule LedBlinker.PwmScheduler do
   use GenServer
 
   # Used as a unique process name.
-  defp via_tuple(frequency, duty_cycle) when is_number(frequency) and is_number(duty_cycle) do
-    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, {frequency, duty_cycle})
+  def via_tuple(gpio_pin) when is_number(gpio_pin) do
+    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, gpio_pin)
   end
 
   def start_link(
         %{
+          gpio_pin: gpio_pin,
           frequency: frequency,
           duty_cycle: duty_cycle,
           turn_on_fn: turn_on_fn,
           turn_off_fn: turn_off_fn
         } = args
       )
-      when frequency in 200..50_000 and
+      when is_number(gpio_pin) and
+             frequency in 200..50_000 and
              duty_cycle in 0..100 and
              is_function(turn_on_fn) and
              is_function(turn_off_fn) do
-    IO.puts("Starting #{__MODULE__}:#{frequency}Hz:#{duty_cycle}%")
+    IO.puts("Starting #{__MODULE__}:#{gpio_pin}:#{frequency}Hz:#{duty_cycle}%")
 
-    GenServer.start_link(
-      __MODULE__,
-      args,
-      name: via_tuple(frequency, duty_cycle)
-    )
+    GenServer.start_link(__MODULE__, args, name: via_tuple(gpio_pin))
   end
-
-  def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
 
   @impl true
   def init(
