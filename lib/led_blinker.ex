@@ -11,6 +11,7 @@ defmodule LedBlinker do
       LedBlinker.stop(20)
       LedBlinker.pwm(20, frequency: 5000, duty_cycle: 80)
       LedBlinker.stop(20)
+      LedBlinker.rgb_modulation([23, 24, 25])
 
   """
 
@@ -37,7 +38,20 @@ defmodule LedBlinker do
     |> LedController.pwm(frequency: frequency, duty_cycle: duty_cycle)
   end
 
-  def stop(gpio_pin) do
+  def rgb_modulation(gpio_pins, options \\ []) when is_list(gpio_pins) do
+    duration = options[:duration] || 5000
+    gpio_pins |> Enum.each(fn gpio_pins ->
+      {:ok, pid} = LedBlinker.Rgb.Modulator.start_link(gpio_pins)
+      :timer.apply_after(duration, GenServer, :stop, [pid])
+      pid
+    end)
+  end
+
+  def stop(gpio_pin)  when is_number(gpio_pin) do
     LedControllerCache.get(gpio_pin) |> LedController.stop()
+  end
+
+  def stop(gpio_pins) when is_list(gpio_pins) do
+    Enum.each(gpio_pins, &(stop(&1)))
   end
 end

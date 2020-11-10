@@ -1,5 +1,7 @@
 # LedBlinker
 
+This is my sandbox where I learn the basics of the IoT development using Nerves.
+
 ## Usage
 
 ```ex
@@ -11,9 +13,13 @@ LedBlinker.toggle(gpio_pin)
 
 LedBlinker.blink(gpio_pin, :timer.seconds(1))
 LedBlinker.stop(gpio_pin)
+LedBlinker.turn_off(gpio_pin) # In case, the LED is stopped with its "on" state.
 
 LedBlinker.pwm(gpio_pin, frequency: 5000, duty_cycle: 80)
 LedBlinker.stop(gpio_pin)
+LedBlinker.turn_off(gpio_pin)
+
+LedBlinker.rgb_modulation([23, 24, 25])
 ```
 
 ## Targets

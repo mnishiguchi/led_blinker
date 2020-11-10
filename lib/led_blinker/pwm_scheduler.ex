@@ -21,7 +21,7 @@ defmodule LedBlinker.PwmScheduler do
 
   """
 
-  use GenServer
+  use GenServer, restart: :temporary
 
   # Used as a unique process name.
   def via_tuple(gpio_pin) when is_number(gpio_pin) do

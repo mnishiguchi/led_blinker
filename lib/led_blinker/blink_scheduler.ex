@@ -14,7 +14,7 @@ defmodule LedBlinker.BlinkScheduler do
 
   """
 
-  use GenServer
+  use GenServer, restart: :temporary
 
   # Used as a unique process name when being registered to the process registry.
   defp via_tuple(blink_fn) when is_function(blink_fn) do
