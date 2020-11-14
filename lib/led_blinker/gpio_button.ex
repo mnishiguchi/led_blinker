@@ -1,6 +1,10 @@
 defmodule LedBlinker.GpioButton do
   @moduledoc """
-  Monitors the state of the button (0 or 1).
+  Monitors the state of the button (0 or 1). Built with
+  [elixir-circuits/circuits_gpio](https://github.com/elixir-circuits/circuits_gpio).
+  Using Rpi's internal pull-down resister, we can hook up a button to a GPIO pin
+  without making a pull-down circuit by hand. For fine-tuning the sensitivity,
+  we can adjust the debounce time.
 
   ## Examples
 
@@ -13,7 +17,7 @@ defmodule LedBlinker.GpioButton do
 
   use GenServer, restart: :temporary
 
-  @debounce_time 200_000_000
+  @debounce_time 500_000_000
 
   def start_link({gpio_pin, on_push_fn}) when is_number(gpio_pin) and is_function(on_push_fn) do
     GenServer.start_link(__MODULE__, {gpio_pin, on_push_fn})
@@ -22,6 +26,9 @@ defmodule LedBlinker.GpioButton do
   def init({gpio_pin, on_push_fn}) do
     # Get a ref to the GPIO pin.
     {:ok, gpio_ref} = Circuits.GPIO.open(gpio_pin, :input)
+
+    # Use internal pull-down resister.
+    :ok = Circuits.GPIO.set_pull_mode(gpio_ref, :pulldown)
 
     # Get messages every time the button is pushed.
     Circuits.GPIO.set_interrupts(gpio_ref, :rising)
