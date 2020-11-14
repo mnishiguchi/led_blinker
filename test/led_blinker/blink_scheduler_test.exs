@@ -15,7 +15,12 @@ defmodule LedBlinker.BlinkSchedulerTest do
   end
 
   defp run_scheduler() do
-    BlinkScheduler.start_link([500, fn -> IO.puts("Hello") end])
+    BlinkScheduler.start_link(%{
+      gpio_pin: 20,
+      interval: 500,
+      blink_fn: fn -> IO.puts("Hello") end
+    })
+
     :timer.sleep(2000)
   end
 end

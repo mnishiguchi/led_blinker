@@ -2,7 +2,7 @@ defmodule LedBlinker.GpioButton do
   @moduledoc """
   Monitors the state of the button (0 or 1).
 
-  Examples:
+  ## Examples
 
       {:ok, pid} = LedBlinker.GpioButton.start_link({
         13,

@@ -10,7 +10,7 @@ defmodule LedBlinker.ProcessRegistry do
   @doc """
   Returns a standardized via-tuple for this registry.
 
-  Examples:
+  ## Examples
 
       ProcessRegistry.via_tuple(LedController, 20)
       # {:via, Registry, {LedBlinker.ProcessRegistry, {LedBlinker.LedController, 20}}}

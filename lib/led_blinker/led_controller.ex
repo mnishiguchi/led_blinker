@@ -18,7 +18,7 @@ defmodule LedBlinker.LedController do
 
   def start_link(gpio_pin) when is_number(gpio_pin) do
     IO.puts("Starting #{__MODULE__}:#{gpio_pin}")
-    GenServer.start(__MODULE__, gpio_pin, name: via_tuple(gpio_pin))
+    GenServer.start_link(__MODULE__, gpio_pin, name: via_tuple(gpio_pin))
   end
 
   def stop(pid) when is_pid(pid), do: GenServer.stop(pid)
@@ -31,17 +31,6 @@ defmodule LedBlinker.LedController do
   def turn_off(pid) when is_pid(pid), do: GenServer.cast(pid, :turn_off)
   def toggle(pid) when is_pid(pid), do: GenServer.cast(pid, :toggle)
 
-  def blink(pid, interval \\ 500) when is_pid(pid) and is_number(interval) do
-    GenServer.cast(pid, {:blink, interval})
-  end
-
-  def pwm(pid, frequency: frequency, duty_cycle: duty_cycle)
-      when is_pid(pid) and
-             frequency in 100..50_000 and
-             duty_cycle in 0..100 do
-    GenServer.cast(pid, {:pwm, frequency, duty_cycle})
-  end
-
   @impl true
   def init(gpio_pin) do
     # Initialize later so we can avoid blocking the caller.
@@ -51,26 +40,24 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def handle_info({:initialize_state, gpio_pin}, _) do
-    gpio_ref = LedBlinker.Led.gpio_ref(gpio_pin)
+    gpio_ref = LedBlinker.GpioLed.gpio_ref(gpio_pin)
 
     {
       :noreply,
       %{
         gpio_pin: gpio_pin,
         gpio_ref: gpio_ref,
-        switched_on: LedBlinker.Led.on?(gpio_ref),
-        blink_pid: nil
+        switched_on: LedBlinker.GpioLed.on?(gpio_ref)
       },
       @idle_timeout
     }
   end
 
   @impl true
-  def handle_info(:timeout, %{gpio_pin: gpio_pin, blink_pid: blink_pid} = state) do
+  def handle_info(:timeout, %{gpio_pin: gpio_pin} = state) do
     IO.puts("Stopping #{__MODULE__}:#{gpio_pin}")
-    cleanup_blink_scheduler(blink_pid)
 
-    {:stop, :normal, {%{state | blink_pid: nil}, @idle_timeout}}
+    {:stop, :normal, {state, @idle_timeout}}
   end
 
   @impl true
@@ -80,7 +67,7 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def handle_cast(:turn_on, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
-    unless switched_on, do: LedBlinker.Led.turn_on(gpio_ref)
+    unless switched_on, do: LedBlinker.GpioLed.turn_on(gpio_ref)
 
     {
       :noreply,
@@ -91,7 +78,7 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def handle_cast(:turn_off, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
-    if switched_on, do: LedBlinker.Led.turn_off(gpio_ref)
+    if switched_on, do: LedBlinker.GpioLed.turn_off(gpio_ref)
 
     {
       :noreply,
@@ -103,8 +90,8 @@ defmodule LedBlinker.LedController do
   @impl true
   def handle_cast(:toggle, %{gpio_ref: gpio_ref, switched_on: switched_on} = state) do
     if switched_on,
-      do: LedBlinker.Led.turn_off(gpio_ref),
-      else: LedBlinker.Led.turn_on(gpio_ref)
+      do: LedBlinker.GpioLed.turn_off(gpio_ref),
+      else: LedBlinker.GpioLed.turn_on(gpio_ref)
 
     {
       :noreply,
@@ -113,61 +100,14 @@ defmodule LedBlinker.LedController do
     }
   end
 
-  # Handle the blinking of the LED.
   @impl true
-  def handle_cast({:blink, interval}, %{gpio_pin: gpio_pin, blink_pid: blink_pid} = state) do
-    cleanup_blink_scheduler(blink_pid)
-
-    {:ok, blink_pid} =
-      LedBlinker.BlinkScheduler.start_link([
-        interval,
-        fn -> GenServer.cast(via_tuple(gpio_pin), :toggle) end
-      ])
+  def terminate(_reason, %{gpio_ref: gpio_ref} = state) do
+    LedBlinker.GpioLed.turn_off(gpio_ref)
 
     {
       :noreply,
-      %{state | blink_pid: blink_pid},
+      %{state | switched_on: false},
       @idle_timeout
     }
-  end
-
-  # Handle changing the brightness of the LED.
-  @impl true
-  def handle_cast(
-        {:pwm, frequency, duty_cycle},
-        %{gpio_pin: gpio_pin, blink_pid: blink_pid} = state
-      ) do
-    cleanup_blink_scheduler(blink_pid)
-
-    {:ok, blink_pid} =
-      LedBlinker.PwmScheduler.start_link(%{
-        gpio_pin: gpio_pin,
-        frequency: frequency,
-        duty_cycle: duty_cycle,
-        turn_on_fn: fn -> GenServer.cast(via_tuple(gpio_pin), :turn_on) end,
-        turn_off_fn: fn -> GenServer.cast(via_tuple(gpio_pin), :turn_off) end
-      })
-
-    {
-      :noreply,
-      %{state | blink_pid: blink_pid},
-      @idle_timeout
-    }
-  end
-
-  @impl true
-  def terminate(_reason, %{blink_pid: blink_pid} = state) do
-    cleanup_blink_scheduler(blink_pid)
-
-    {
-      :noreply,
-      %{state | blink_pid: nil},
-      @idle_timeout
-    }
-  end
-
-  # Stops currently-running blink process if any.
-  defp cleanup_blink_scheduler(blink_pid) do
-    if blink_pid, do: GenServer.stop(blink_pid)
   end
 end

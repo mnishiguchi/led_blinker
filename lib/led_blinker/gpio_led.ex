@@ -1,4 +1,4 @@
-defmodule LedBlinker.Led do
+defmodule LedBlinker.GpioLed do
   @moduledoc """
   A collection of helper functions to manipulate LEDs. Built with Circuits.GPIO
   functions. https://github.com/elixir-circuits/circuits_gpio#gpio
@@ -12,7 +12,7 @@ defmodule LedBlinker.Led do
 
   ## Examples
 
-      Led.gpio_ref(20)
+      LedBlinker.GpioLed.gpio_ref(20)
       # #Reference<0.1277966640.803078163.183293>
 
   """
@@ -28,13 +28,11 @@ defmodule LedBlinker.Led do
 
   ## Examples
 
-      Led.gpio_ref(20) |> Led.on?
+      LedBlinker.GpioLed.gpio_ref(20) |> Led.on?
       # false
 
   """
   def on?(gpio_ref) when is_reference(gpio_ref) do
-    IO.puts("Checking the LED state")
-
     case Circuits.GPIO.read(gpio_ref) do
       @gpio_on -> true
       @gpio_off -> false
@@ -48,12 +46,11 @@ defmodule LedBlinker.Led do
 
   ## Examples
 
-      Led.gpio_ref(20) |> Led.turn_on
+      LedBlinker.GpioLed.gpio_ref(20) |> Led.turn_on
       # {:ok, #PID<0.236.0>}
 
   """
   def turn_on(gpio_ref) when is_reference(gpio_ref) do
-    IO.puts("Turning on the LED")
     Circuits.GPIO.write(gpio_ref, @gpio_on)
   end
 
@@ -62,12 +59,11 @@ defmodule LedBlinker.Led do
 
   ## Examples
 
-      Led.gpio_ref(20) |> Led.turn_off
+      LedBlinker.GpioLed.gpio_ref(20) |> Led.turn_off
       # {:ok, #PID<0.240.0>}
 
   """
   def turn_off(gpio_ref) when is_reference(gpio_ref) do
-    IO.puts("Turning off the LED")
     Circuits.GPIO.write(gpio_ref, @gpio_off)
   end
 end

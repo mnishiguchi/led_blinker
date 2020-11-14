@@ -29,18 +29,4 @@ defmodule LedBlinker.LedControllerTest do
     LedController.toggle(pid)
     assert LedController.on?(pid)
   end
-
-  test "blinking", %{pid: pid} do
-    # Initially ON.
-    LedController.turn_on(pid)
-
-    # Start blinking.
-    LedController.blink(pid, 500)
-    :timer.sleep(500)
-    assert LedController.off?(pid)
-    :timer.sleep(500)
-    assert LedController.on?(pid)
-    :timer.sleep(500)
-    assert LedController.off?(pid)
-  end
 end

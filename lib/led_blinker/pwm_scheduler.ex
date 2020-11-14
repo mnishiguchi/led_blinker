@@ -2,7 +2,7 @@ defmodule LedBlinker.PwmScheduler do
   @moduledoc """
   Repeats the specified cycle.
 
-  Examples:
+  ## Examples
 
       {:ok, pid} =
         LedBlinker.PwmScheduler.start_link(%{
@@ -47,6 +47,12 @@ defmodule LedBlinker.PwmScheduler do
     GenServer.start_link(__MODULE__, args, name: via_tuple(gpio_pin))
   end
 
+  def stop(gpio_pin) when is_number(gpio_pin) do
+    unless LedBlinker.ProcessRegistry.whereis_via_tuple(via_tuple(gpio_pin)) == :undefined do
+      GenServer.stop(via_tuple(gpio_pin))
+    end
+  end
+
   @impl true
   def init(
         %{
@@ -82,6 +88,12 @@ defmodule LedBlinker.PwmScheduler do
   def handle_info(:turn_off, %{turn_off_fn: turn_off_fn, off_time: off_time} = state) do
     turn_off_fn.()
     Process.send_after(self(), :turn_on, off_time)
+    {:noreply, state}
+  end
+
+  @impl true
+  def terminate(_reason, %{turn_off_fn: turn_off_fn} = state) do
+    turn_off_fn.()
     {:noreply, state}
   end
 

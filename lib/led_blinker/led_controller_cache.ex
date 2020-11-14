@@ -3,7 +3,7 @@ defmodule LedBlinker.LedControllerCache do
   Maintains a collection of `LedController` processes and is responsible for
   their creation and retrieval.
 
-  Examples:
+  ## Examples
 
       gpio_pin = 20
       gpio_pin |> LedControllerCache.get |> LedController.turn_on

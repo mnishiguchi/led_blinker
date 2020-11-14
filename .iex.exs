@@ -1,8 +1,9 @@
-alias Elixir.LedBlinker.System
-alias Elixir.LedBlinker.ProcessRegistry
-alias Elixir.LedBlinker.LedControllerCache
-alias Elixir.LedBlinker.LedController
-alias Elixir.LedBlinker.BlinkScheduler
-alias Elixir.LedBlinker.Led
-alias Elixir.LedBlinker.PwmScheduler
-alias Elixir.LedBlinker.Rgb
+alias LedBlinker.System
+alias LedBlinker.ProcessRegistry
+alias LedBlinker.LedControllerCache
+alias LedBlinker.LedController
+alias LedBlinker.BlinkScheduler
+alias LedBlinker.PwmScheduler
+alias LedBlinker.RgbScheduler
+alias LedBlinker.GpioLed
+alias LedBlinker.GpioButton
