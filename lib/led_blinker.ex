@@ -9,9 +9,13 @@ defmodule LedBlinker do
       LedBlinker.toggle(20)
 
       LedBlinker.blink(20, 1000)
+      LedBlinker.stop_blink(20)
+
       LedBlinker.pwm(20, frequency: 5000, duty_cycle: 80)
+      LedBlinker.stop_pwm(20)
 
       LedBlinker.rgb_modulation([23, 24, 25])
+      LedBlinker.stop_rgb_modulation([23, 24, 25])
 
   """
 
@@ -35,8 +39,12 @@ defmodule LedBlinker do
            interval: interval,
            blink_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.toggle() end
          }) do
-      {:ok, scheduler_pid} -> scheduler_pid
-      {:error, {:already_started, scheduler_pid}} -> scheduler_pid
+      {:error, {:already_started, _}} ->
+        stop_blink(gpio_pin)
+        blink(gpio_pin, interval)
+
+      {:ok, pid} ->
+        pid
     end
   end
 
@@ -53,8 +61,12 @@ defmodule LedBlinker do
            turn_on_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.turn_on() end,
            turn_off_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.turn_off() end
          }) do
-      {:ok, scheduler_pid} -> scheduler_pid
-      {:error, {:already_started, scheduler_pid}} -> scheduler_pid
+      {:error, {:already_started, _}} ->
+        stop_pwm(gpio_pin)
+        pwm(gpio_pin, frequency: frequency, duty_cycle: duty_cycle)
+
+      {:ok, pid} ->
+        pid
     end
   end
 
@@ -66,16 +78,26 @@ defmodule LedBlinker do
   def rgb_modulation(gpio_pins, options \\ []) when is_list(gpio_pins) do
     duration = options[:duration] || 5000
 
-    Enum.map(gpio_pins, fn gpio_pins ->
-      {:ok, pid} = LedBlinker.RgbModulator.start_link(gpio_pins)
-      :timer.apply_after(duration, LedBlinker.RgbModulator, :stop, [pid])
-      pid
+    Enum.map(gpio_pins, fn gpio_pin ->
+      case LedBlinker.RgbModulator.start_link(gpio_pin) do
+        {:error, {:already_started, _}} ->
+          # Stop and retry if already started.
+          LedBlinker.RgbModulator.stop(gpio_pin)
+          rgb_modulation(gpio_pins, options)
+
+        {:ok, pid} ->
+          :timer.apply_after(duration, LedBlinker.RgbModulator, :stop, [gpio_pin])
+          pid
+      end
     end)
   end
 
   def stop_rgb_modulation(gpio_pins) when is_list(gpio_pins) do
     Enum.map(gpio_pins, fn gpio_pin ->
-      Task.start(fn -> LedBlinker.RgbModulator.stop(gpio_pin) end)
+      Task.start_link(fn ->
+        LedBlinker.RgbModulator.stop(gpio_pin)
+        turn_off(gpio_pin)
+      end)
     end)
   end
 end
