@@ -42,8 +42,6 @@ defmodule LedBlinker.PwmScheduler do
              duty_cycle in 0..100 and
              is_function(turn_on_fn) and
              is_function(turn_off_fn) do
-    IO.puts("Starting #{__MODULE__}:#{gpio_pin}:#{frequency}Hz:#{duty_cycle}%")
-
     GenServer.start_link(__MODULE__, args, name: via_tuple(gpio_pin))
   end
 

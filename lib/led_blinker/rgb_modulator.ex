@@ -22,7 +22,6 @@ defmodule LedBlinker.RgbModulator do
   end
 
   def start_link(gpio_pin, options \\ []) when is_number(gpio_pin) and is_list(options) do
-    IO.puts("Starting #{__MODULE__}")
     GenServer.start(__MODULE__, {gpio_pin, options}, name: via_tuple(gpio_pin))
   end
 

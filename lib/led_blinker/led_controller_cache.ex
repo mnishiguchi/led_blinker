@@ -28,8 +28,6 @@ defmodule LedBlinker.LedControllerCache do
   # with a new process so the process needs to be registered under a local alias
   # instead of passing a pid around.
   def start_link() do
-    IO.puts("Starting #{__MODULE__}")
-
     # Start the supervisor process here but no children are specified at this
     # point. The process is registered under a local name, which makes it easy
     # to interact with that process and ask it to start a child.

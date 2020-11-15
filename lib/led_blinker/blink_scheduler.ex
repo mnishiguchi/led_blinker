@@ -27,8 +27,6 @@ defmodule LedBlinker.BlinkScheduler do
 
   def start_link(%{gpio_pin: gpio_pin, interval: interval, blink_fn: blink_fn})
       when is_number(gpio_pin) and is_number(interval) and is_function(blink_fn) do
-    IO.puts("Starting #{__MODULE__}")
-
     GenServer.start_link(
       __MODULE__,
       %{gpio_pin: gpio_pin, interval: interval, blink_fn: blink_fn},

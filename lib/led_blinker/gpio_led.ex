@@ -17,8 +17,6 @@ defmodule LedBlinker.GpioLed do
 
   """
   def gpio_ref(gpio_pin) do
-    IO.puts("Obtaining the LED ref for #{gpio_pin}")
-
     {:ok, gpio_ref} = Circuits.GPIO.open(gpio_pin, :output)
     gpio_ref
   end

@@ -56,7 +56,6 @@ defmodule LedBlinker.ProcessRegistry do
   Starts a unique registry.
   """
   def start_link() do
-    IO.puts("Starting #{__MODULE__}")
     Registry.start_link(keys: :unique, name: __MODULE__)
   end
 end

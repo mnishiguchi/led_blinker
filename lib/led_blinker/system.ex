@@ -2,7 +2,6 @@ defmodule LedBlinker.System do
   use Supervisor
 
   def start_link(_args) do
-    IO.puts("Starting #{__MODULE__}")
     Supervisor.start_link(__MODULE__, nil)
   end
 

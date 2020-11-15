@@ -6,7 +6,6 @@ defmodule LedBlinker.PwmSchedulerTest do
 
   test "pulse width modulation" do
     assert capture_io(fn -> run_scheduler() end) == """
-           Starting Elixir.LedBlinker.PwmScheduler:19:5000Hz:80%
            1
            0
            1

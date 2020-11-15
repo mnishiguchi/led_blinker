@@ -6,7 +6,6 @@ defmodule LedBlinker.BlinkSchedulerTest do
 
   test "blinking" do
     assert capture_io(fn -> run_scheduler() end) == """
-           Starting Elixir.LedBlinker.BlinkScheduler
            Hello
            Hello
            Hello

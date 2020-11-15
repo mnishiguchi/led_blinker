@@ -9,6 +9,8 @@ defmodule LedBlinker.LedController do
   # the next use, so there is no need to restart it automatically.
   use GenServer, restart: :temporary
 
+  require Logger
+
   @idle_timeout :timer.minutes(10)
 
   # Used as a unique process name.
@@ -17,7 +19,6 @@ defmodule LedBlinker.LedController do
   end
 
   def start_link(gpio_pin) when is_number(gpio_pin) do
-    IO.puts("Starting #{__MODULE__}:#{gpio_pin}")
     GenServer.start_link(__MODULE__, gpio_pin, name: via_tuple(gpio_pin))
   end
 
@@ -55,7 +56,7 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def handle_info(:timeout, %{gpio_pin: gpio_pin} = state) do
-    IO.puts("Stopping #{__MODULE__}:#{gpio_pin}")
+    Logger.info("Timeout #{__MODULE__}:#{gpio_pin}")
 
     {:stop, :normal, {state, @idle_timeout}}
   end
