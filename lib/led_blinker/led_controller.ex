@@ -15,7 +15,14 @@ defmodule LedBlinker.LedController do
 
   # Used as a unique process name.
   def via_tuple(gpio_pin) when is_number(gpio_pin) do
-    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, gpio_pin)
+    LedBlinker.ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
+  end
+
+  def whereis(gpio_pin) when is_number(gpio_pin) do
+    case LedBlinker.ProcessRegistry.whereis_name({__MODULE__, gpio_pin}) do
+      :undefined -> nil
+      pid -> pid
+    end
   end
 
   def start_link(gpio_pin) when is_number(gpio_pin) do

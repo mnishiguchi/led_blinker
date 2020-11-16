@@ -22,29 +22,29 @@ defmodule LedBlinker do
   alias LedBlinker.{LedControllerCache, LedController}
 
   def turn_on(gpio_pin) do
-    LedControllerCache.get(gpio_pin) |> LedController.turn_on()
+    gpio_pin |> LedControllerCache.get() |> LedController.turn_on()
   end
 
   def turn_off(gpio_pin) do
-    LedControllerCache.get(gpio_pin) |> LedController.turn_off()
+    gpio_pin |> LedControllerCache.get() |> LedController.turn_off()
   end
 
   def toggle(gpio_pin) do
-    LedControllerCache.get(gpio_pin) |> LedController.toggle()
+    gpio_pin |> LedControllerCache.get() |> LedController.toggle()
   end
 
   def blink(gpio_pin, interval \\ 500) do
-    case LedBlinker.BlinkScheduler.start_link(%{
-           gpio_pin: gpio_pin,
-           interval: interval,
-           blink_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.toggle() end
-         }) do
-      {:error, {:already_started, _}} ->
-        stop_blink(gpio_pin)
-        blink(gpio_pin, interval)
+    case LedBlinker.BlinkScheduler.whereis(gpio_pin) do
+      nil ->
+        LedBlinker.BlinkScheduler.start_link(%{
+          gpio_pin: gpio_pin,
+          interval: interval,
+          blink_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.toggle() end
+        })
 
-      {:ok, pid} ->
-        pid
+      pid ->
+        GenServer.stop(pid)
+        blink(gpio_pin, interval)
     end
   end
 
@@ -54,19 +54,19 @@ defmodule LedBlinker do
   end
 
   def pwm(gpio_pin, frequency: frequency, duty_cycle: duty_cycle) do
-    case LedBlinker.PwmScheduler.start_link(%{
-           gpio_pin: gpio_pin,
-           frequency: frequency,
-           duty_cycle: duty_cycle,
-           turn_on_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.turn_on() end,
-           turn_off_fn: fn -> LedControllerCache.get(gpio_pin) |> LedController.turn_off() end
-         }) do
-      {:error, {:already_started, _}} ->
-        stop_pwm(gpio_pin)
-        pwm(gpio_pin, frequency: frequency, duty_cycle: duty_cycle)
+    case LedBlinker.PwmScheduler.whereis(gpio_pin) do
+      nil ->
+        LedBlinker.PwmScheduler.start_link(%{
+          gpio_pin: gpio_pin,
+          frequency: frequency,
+          duty_cycle: duty_cycle,
+          turn_on_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_on() end,
+          turn_off_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_off() end
+        })
 
-      {:ok, pid} ->
-        pid
+      pid ->
+        GenServer.stop(pid)
+        pwm(gpio_pin, frequency: frequency, duty_cycle: duty_cycle)
     end
   end
 
@@ -79,16 +79,17 @@ defmodule LedBlinker do
     duration = options[:duration] || 5000
 
     Enum.map(gpio_pins, fn gpio_pin ->
-      case LedBlinker.RgbModulator.start_link(gpio_pin) do
-        {:error, {:already_started, _}} ->
-          # Stop and retry if already started.
-          LedBlinker.RgbModulator.stop(gpio_pin)
-          rgb_modulation(gpio_pins, options)
+      Task.start_link(fn ->
+        case LedBlinker.RgbModulator.whereis(gpio_pin) do
+          nil ->
+            LedBlinker.RgbModulator.start_link(gpio_pin)
+            :timer.apply_after(duration, LedBlinker.RgbModulator, :stop, [gpio_pin])
 
-        {:ok, pid} ->
-          :timer.apply_after(duration, LedBlinker.RgbModulator, :stop, [gpio_pin])
-          pid
-      end
+          pid ->
+            GenServer.stop(pid)
+            rgb_modulation(gpio_pins, options)
+        end
+      end)
     end)
   end
 

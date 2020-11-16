@@ -22,7 +22,14 @@ defmodule LedBlinker.BlinkScheduler do
 
   # Used as a unique process name when being registered to the process registry.
   defp via_tuple(gpio_pin) when is_number(gpio_pin) do
-    LedBlinker.ProcessRegistry.via_tuple(__MODULE__, gpio_pin)
+    LedBlinker.ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
+  end
+
+  def whereis(gpio_pin) when is_number(gpio_pin) do
+    case LedBlinker.ProcessRegistry.whereis_name({__MODULE__, gpio_pin}) do
+      :undefined -> nil
+      pid -> pid
+    end
   end
 
   def start_link(%{gpio_pin: gpio_pin, interval: interval, blink_fn: blink_fn})
@@ -35,9 +42,7 @@ defmodule LedBlinker.BlinkScheduler do
   end
 
   def stop(gpio_pin) when is_number(gpio_pin) do
-    unless LedBlinker.ProcessRegistry.whereis_via_tuple(via_tuple(gpio_pin)) == :undefined do
-      GenServer.stop(via_tuple(gpio_pin))
-    end
+    if whereis(gpio_pin), do: GenServer.stop(via_tuple(gpio_pin))
   end
 
   @impl true

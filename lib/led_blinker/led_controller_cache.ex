@@ -38,21 +38,22 @@ defmodule LedBlinker.LedControllerCache do
   Finds or creates a LED controller process for a given GPIO pin.
   """
   def get(gpio_pin) when is_number(gpio_pin) do
-    # The way start_child is used here is not very efficient. Every time we want
-    # to work with a to-do list, we issue a request to the supervisor, so the
-    # supervisor process can become a bottleneck. We will improve it later.
-    case start_child(gpio_pin) do
-      {:ok, pid} -> pid
-      {:error, {:already_started, pid}} -> pid
-    end
+    existing_process(gpio_pin) || new_process(gpio_pin)
   end
 
-  defp start_child(gpio_pin) when is_number(gpio_pin) do
+  defp existing_process(gpio_pin) when is_number(gpio_pin) do
+    LedBlinker.LedController.whereis(gpio_pin)
+  end
+
+  defp new_process(gpio_pin) when is_number(gpio_pin) do
     # Ask the supervisor to start a child. DynamicSupervisor.start_child/2 is a
     # cross-process synchronous call. A request is sent to the supervisor
     # process, which then starts the child. If multiple client processes
     # simultaneously try to start a child under the same supervisor, the
     # requests will be serialized.
-    DynamicSupervisor.start_child(__MODULE__, {LedBlinker.LedController, gpio_pin})
+    case DynamicSupervisor.start_child(__MODULE__, {LedBlinker.LedController, gpio_pin}) do
+      {:ok, pid} -> pid
+      {:error, {:already_started, pid}} -> pid
+    end
   end
 end

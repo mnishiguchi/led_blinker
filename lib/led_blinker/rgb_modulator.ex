@@ -18,7 +18,14 @@ defmodule LedBlinker.RgbModulator do
 
   # Used as a unique process name.
   def via_tuple(gpio_pin) when is_number(gpio_pin) do
-    ProcessRegistry.via_tuple(__MODULE__, gpio_pin)
+    ProcessRegistry.via_tuple({__MODULE__, gpio_pin})
+  end
+
+  def whereis(gpio_pin) when is_number(gpio_pin) do
+    case LedBlinker.ProcessRegistry.whereis_name({__MODULE__, gpio_pin}) do
+      :undefined -> nil
+      pid -> pid
+    end
   end
 
   def start_link(gpio_pin, options \\ []) when is_number(gpio_pin) and is_list(options) do
@@ -26,9 +33,7 @@ defmodule LedBlinker.RgbModulator do
   end
 
   def stop(gpio_pin) when is_number(gpio_pin) do
-    unless ProcessRegistry.whereis_via_tuple(via_tuple(gpio_pin)) == :undefined do
-      GenServer.stop(via_tuple(gpio_pin))
-    end
+    if whereis(gpio_pin), do: GenServer.stop(via_tuple(gpio_pin))
   end
 
   @impl true
