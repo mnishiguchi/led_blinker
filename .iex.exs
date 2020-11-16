@@ -5,5 +5,5 @@ alias LedBlinker.LedController
 alias LedBlinker.BlinkScheduler
 alias LedBlinker.PwmScheduler
 alias LedBlinker.RgbScheduler
-alias LedBlinker.GpioLed
-alias LedBlinker.GpioButton
+alias LedBlinker.GPIO.LED
+alias LedBlinker.GPIO.Button

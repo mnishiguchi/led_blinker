@@ -1,4 +1,4 @@
-defmodule LedBlinker.GpioLed do
+defmodule LedBlinker.GPIO.LED do
   @moduledoc """
   A collection of helper functions to manipulate LEDs. Built with Circuits.GPIO
   functions. https://github.com/elixir-circuits/circuits_gpio#gpio
@@ -12,7 +12,7 @@ defmodule LedBlinker.GpioLed do
 
   ## Examples
 
-      LedBlinker.GpioLed.gpio_ref(20)
+      LedBlinker.GPIO.LED.gpio_ref(20)
       # #Reference<0.1277966640.803078163.183293>
 
   """
@@ -26,7 +26,7 @@ defmodule LedBlinker.GpioLed do
 
   ## Examples
 
-      LedBlinker.GpioLed.gpio_ref(20) |> Led.on?
+      LedBlinker.GPIO.LED.gpio_ref(20) |> Led.on?
       # false
 
   """
@@ -44,7 +44,7 @@ defmodule LedBlinker.GpioLed do
 
   ## Examples
 
-      LedBlinker.GpioLed.gpio_ref(20) |> Led.turn_on
+      LedBlinker.GPIO.LED.gpio_ref(20) |> Led.turn_on
       # {:ok, #PID<0.236.0>}
 
   """
@@ -57,7 +57,7 @@ defmodule LedBlinker.GpioLed do
 
   ## Examples
 
-      LedBlinker.GpioLed.gpio_ref(20) |> Led.turn_off
+      LedBlinker.GPIO.LED.gpio_ref(20) |> Led.turn_off
       # {:ok, #PID<0.240.0>}
 
   """

@@ -1,4 +1,4 @@
-defmodule LedBlinker.GpioButton do
+defmodule LedBlinker.GPIO.Button do
   @moduledoc """
   Monitors the state of the button (0 or 1). Built with
   [elixir-circuits/circuits_gpio](https://github.com/elixir-circuits/circuits_gpio).
@@ -8,7 +8,7 @@ defmodule LedBlinker.GpioButton do
 
   ## Examples
 
-      {:ok, pid} = LedBlinker.GpioButton.start_link({
+      {:ok, pid} = LedBlinker.GPIO.Button.start_link({
         13,
         fn at -> IO.puts(at) end
       })
