@@ -1,8 +1,6 @@
-defmodule LedBlinker.PwmSchedulerTest do
+defmodule LedBlinker.Gpio.PwmTest do
   use ExUnit.Case
   import ExUnit.CaptureIO
-
-  alias LedBlinker.PwmScheduler
 
   test "pulse width modulation" do
     assert capture_io(fn -> run_scheduler() end) == """
@@ -19,7 +17,7 @@ defmodule LedBlinker.PwmSchedulerTest do
 
   defp run_scheduler() do
     {:ok, _pid} =
-      PwmScheduler.start_link(%{
+      LedBlinker.PwmScheduler.start_link(%{
         gpio_pin: 19,
         frequency: 5000,
         duty_cycle: 80,

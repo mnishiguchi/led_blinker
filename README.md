@@ -19,14 +19,18 @@ LedBlinker.stop_blink(gpio_pin)
 
 ```ex
 gpio_pin = 20
-LedBlinker.pwm(gpio_pin, frequency: 5000, duty_cycle: 80)
+LedBlinker.pwm(gpio_pin, 80)
 LedBlinker.stop_pwm(gpio_pin)
 ```
 
 ```ex
-rgb_pins = [23, 24, 25]
-LedBlinker.rgb_modulation(rgb_pins)
-LedBlinker.stop_rgb_modulation(rgb_pins)
+[12, 13, 19] |> Enum.shuffle |> Enum.map(fn gpio_pin ->
+  Task.start_link(fn ->
+    Enum.to_list(1..100) ++ Enum.to_list(99..0)
+    |> Enum.each fn level -> LedBlinker.pwm(gpio_pin, level); :timer.sleep(10) end
+  end)
+  :timer.sleep(2000)
+end)
 ```
 
 ## Targets
