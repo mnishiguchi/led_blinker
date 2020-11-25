@@ -5,30 +5,35 @@ This is my playground where I learn the basics of the IoT development using Nerv
 ## Usage
 
 ```ex
-gpio_pin = 20
+gpio_pin = 12
 LedBlinker.turn_on(gpio_pin)
 LedBlinker.turn_off(gpio_pin)
 LedBlinker.toggle(gpio_pin)
 ```
 
 ```ex
-gpio_pin = 20
-LedBlinker.blink(gpio_pin, :timer.seconds(1))
+gpio_pin = 12
+LedBlinker.blink(gpio_pin, 1000)
 LedBlinker.stop_blink(gpio_pin)
 ```
 
 ```ex
-gpio_pin = 20
+gpio_pin = 12
 LedBlinker.pwm(gpio_pin, 80)
 LedBlinker.stop_pwm(gpio_pin)
 ```
 
 ```ex
-[12, 13, 19] |> Enum.shuffle |> Enum.map(fn gpio_pin ->
+gpio_pins = [12, 13, 19]
+gpio_pins |> Enum.map(fn gpio_pin ->
   Task.start_link(fn ->
-    Enum.to_list(1..100) ++ Enum.to_list(99..0)
-    |> Enum.each fn level -> LedBlinker.pwm(gpio_pin, level); :timer.sleep(10) end
+    (Enum.to_list(1..100) ++ Enum.to_list(99..0))
+    |> Enum.each(fn level ->
+      LedBlinker.pwm(gpio_pin, level)
+      :timer.sleep(9)
+    end)
   end)
+
   :timer.sleep(2000)
 end)
 ```
@@ -48,16 +53,17 @@ https://hexdocs.pm/nerves/targets.html#content
 ## Getting Started
 
 To start your Nerves app:
-  * `export MIX_TARGET=my_target` or prefix every command with
-    `MIX_TARGET=my_target`. For example, `MIX_TARGET=rpi3`
-  * Install dependencies with `mix deps.get`
-  * Create firmware with `mix firmware`
-  * Burn to an SD card with `mix firmware.burn`
+
+- `export MIX_TARGET=my_target` or prefix every command with
+  `MIX_TARGET=my_target`. For example, `MIX_TARGET=rpi3`
+- Install dependencies with `mix deps.get`
+- Create firmware with `mix firmware`
+- Burn to an SD card with `mix firmware.burn`
 
 ## Learn more
 
-  * Official docs: https://hexdocs.pm/nerves/getting-started.html
-  * Official website: https://nerves-project.org/
-  * Forum: https://elixirforum.com/c/nerves-forum
-  * Discussion Slack elixir-lang #nerves ([Invite](https://elixir-slackin.herokuapp.com/))
-  * Source: https://github.com/nerves-project/nerves
+- Official docs: https://hexdocs.pm/nerves/getting-started.html
+- Official website: https://nerves-project.org/
+- Forum: https://elixirforum.com/c/nerves-forum
+- Discussion Slack elixir-lang #nerves ([Invite](https://elixir-slackin.herokuapp.com/))
+- Source: https://github.com/nerves-project/nerves

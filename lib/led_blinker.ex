@@ -38,7 +38,7 @@ defmodule LedBlinker do
     gpio_pin |> LedControllerCache.get() |> LedController.toggle()
   end
 
-  def blink(gpio_pin, frequency \\ 5000, duty_cycle \\ 50) do
+  def blink(gpio_pin, frequency \\ 1, duty_cycle \\ 50) do
     case LedBlinker.PwmBlinkScheduler.whereis(gpio_pin) do
       nil ->
         LedBlinker.PwmBlinkScheduler.start_link(%{
