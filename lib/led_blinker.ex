@@ -38,23 +38,25 @@ defmodule LedBlinker do
     gpio_pin |> LedControllerCache.get() |> LedController.toggle()
   end
 
-  def blink(gpio_pin, interval \\ 500) do
-    case LedBlinker.BlinkScheduler.whereis(gpio_pin) do
+  def blink(gpio_pin, frequency \\ 5000, duty_cycle \\ 50) do
+    case LedBlinker.PwmBlinkScheduler.whereis(gpio_pin) do
       nil ->
-        LedBlinker.BlinkScheduler.start_link(%{
+        LedBlinker.PwmBlinkScheduler.start_link(%{
           gpio_pin: gpio_pin,
-          interval: interval,
-          blink_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.toggle() end
+          frequency: frequency,
+          duty_cycle: duty_cycle,
+          turn_on_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_on() end,
+          turn_off_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_off() end
         })
 
       pid ->
         GenServer.stop(pid)
-        blink(gpio_pin, interval)
+        blink(gpio_pin, frequency, duty_cycle)
     end
   end
 
   def stop_blink(gpio_pin) do
-    LedBlinker.BlinkScheduler.stop(gpio_pin)
+    LedBlinker.PwmBlinkScheduler.stop(gpio_pin)
     turn_off(gpio_pin)
   end
 

@@ -1,12 +1,12 @@
-defmodule LedBlinker.PwmScheduler do
+defmodule LedBlinker.PwmBlinkScheduler do
   @moduledoc """
-  [Deprecated] Use better alternatives for PWM.
-  Repeats the specified cycle.
+  Repeats the specified cycle for blinking LEDs. For faster PWM, please consider
+  using better alternatives.
 
   ## Examples
 
       {:ok, pid} =
-        LedBlinker.Gpio.PwmScheduler.start_link(%{
+        LedBlinker.PwmBlinkScheduler.start_link(%{
           gpio_pin: 19,
           frequency: 5000,
           duty_cycle: 80,

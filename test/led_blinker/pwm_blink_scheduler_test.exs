@@ -1,4 +1,4 @@
-defmodule LedBlinker.Gpio.PwmTest do
+defmodule LedBlinker.PwmBlinkSchedulerTest do
   use ExUnit.Case
   import ExUnit.CaptureIO
 
@@ -17,7 +17,7 @@ defmodule LedBlinker.Gpio.PwmTest do
 
   defp run_scheduler() do
     {:ok, _pid} =
-      LedBlinker.PwmScheduler.start_link(%{
+      LedBlinker.PwmBlinkScheduler.start_link(%{
         gpio_pin: 19,
         frequency: 5000,
         duty_cycle: 80,

@@ -1,10 +1,10 @@
-defmodule LedBlinker.BlinkScheduler do
+defmodule LedBlinker.SimpleBlinkScheduler do
   @moduledoc """
   Repeats running the specified function with the specified interval.
 
   ## Examples
 
-      {:ok, pid} = LedBlinker.BlinkScheduler.start_link(%{
+      {:ok, pid} = LedBlinker.SimpleBlinkScheduler.start_link(%{
         gpio_pin: 19,
         interval: 500,
         blink_fn: fn -> IO.puts("Hello") end
@@ -13,7 +13,7 @@ defmodule LedBlinker.BlinkScheduler do
       # Hello
       # Hello
       # ...
-      LedBlinker.BlinkScheduler.stop(pid)
+      LedBlinker.SimpleBlinkScheduler.stop(pid)
       # :ok
 
   """
