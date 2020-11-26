@@ -2,7 +2,7 @@ defmodule LedBlinker.Pigpio.PwmTest do
   use ExUnit.Case, async: true
 
   test "valid args does not raise a runtime error at least" do
-    {:error, _} = LedBlinker.Pigpio.Pwm.call(12, 5000, 100)
+    {:error, _} = LedBlinker.Pigpio.Pwm.call(12, 100, 100)
   end
 
   test "invalid gpio_pin" do
@@ -15,7 +15,7 @@ defmodule LedBlinker.Pigpio.PwmTest do
   end
 
   test "invalid frequency" do
-    [0, "5000"]
+    [0, "100"]
     |> Enum.each(fn invalid_frequency ->
       assert_raise FunctionClauseError, fn ->
         LedBlinker.Pigpio.Pwm.call(12, invalid_frequency, 100)

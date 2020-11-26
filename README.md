@@ -24,17 +24,17 @@ LedBlinker.stop_pwm(gpio_pin)
 ```
 
 ```ex
-gpio_pins = [12, 13, 19]
-gpio_pins |> Enum.map(fn gpio_pin ->
+[12, 13, 19] |> Enum.shuffle |> Enum.map(fn gpio_pin ->
   Task.start_link(fn ->
-    (Enum.to_list(1..100) ++ Enum.to_list(99..0))
-    |> Enum.each(fn level ->
-      LedBlinker.pwm(gpio_pin, level)
-      :timer.sleep(9)
+    Enum.to_list(1..10) ++ Enum.to_list(9..0)
+    |> Enum.map(fn x -> x * 10 end)
+    |> Enum.map(fn level ->
+      LedBlinker.brightness(gpio_pin, level)
+      :timer.sleep(499)
     end)
   end)
 
-  :timer.sleep(2000)
+  :timer.sleep(10_000)
 end)
 ```
 

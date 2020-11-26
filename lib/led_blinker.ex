@@ -8,19 +8,11 @@ defmodule LedBlinker do
       LedBlinker.turn_off(12)
       LedBlinker.toggle(12)
 
-      LedBlinker.blink(12, 1000)
+      LedBlinker.blink(12, 100)
       LedBlinker.stop_blink(12)
 
       LedBlinker.pwm(12, 80)
       LedBlinker.stop_pwm(12)
-
-      [12, 13, 19] |> Enum.shuffle |> Enum.map(fn gpio_pin ->
-        Task.start_link(fn ->
-          Enum.to_list(1..100) ++ Enum.to_list(99..0)
-          |> Enum.each fn level -> LedBlinker.pwm(gpio_pin, level); :timer.sleep(10) end
-        end)
-        :timer.sleep(2000)
-      end)
 
   """
 
@@ -60,11 +52,8 @@ defmodule LedBlinker do
     turn_off(gpio_pin)
   end
 
-  def pwm(gpio_pin, percentage) do
-    LedBlinker.Pigpio.Pwm.call(gpio_pin, 800, percentage)
-  end
-
-  def stop_pwm(gpio_pin) do
-    LedBlinker.Pigpio.Pwm.call(gpio_pin, 800, 0)
+  def brightness(gpio_pin, percentage) do
+    # 100Hz (period duration: ~10ms) is fast enough.
+    blink(gpio_pin, 100, percentage)
   end
 end

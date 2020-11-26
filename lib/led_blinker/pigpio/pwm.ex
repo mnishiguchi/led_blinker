@@ -11,12 +11,12 @@ defmodule LedBlinker.Pigpio.Pwm do
 
   ## Examples
 
-      LedBlinker.Pigpio.Pwm.call(12, 500, 50)
+      LedBlinker.Pigpio.Pwm.call(12, 50, 50)
 
   """
   @impl LedBlinker.Pwm
   def call(gpio_pin, frequency, duty_cycle)
-      when gpio_pin in 1..100 and frequency in 1..50_000 and duty_cycle in 0..100 do
+      when gpio_pin in 1..100 and frequency in 1..100 and duty_cycle in 0..100 do
     # Pigpiox works only on the target device.
     case Code.ensure_compiled(Pigpiox.Pwm) do
       {:module, module} ->
