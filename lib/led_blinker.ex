@@ -8,11 +8,10 @@ defmodule LedBlinker do
       LedBlinker.turn_off(12)
       LedBlinker.toggle(12)
 
-      LedBlinker.blink(12, 100)
+      LedBlinker.blink(12)
       LedBlinker.stop_blink(12)
 
-      LedBlinker.pwm(12, 80)
-      LedBlinker.stop_pwm(12)
+      LedBlinker.brightness(12, 80)
 
   """
 
@@ -31,19 +30,18 @@ defmodule LedBlinker do
   end
 
   def blink(gpio_pin, frequency \\ 1, duty_cycle \\ 50) do
-    case LedBlinker.PwmBlinkScheduler.whereis(gpio_pin) do
-      nil ->
-        LedBlinker.PwmBlinkScheduler.start_link(%{
+    if LedBlinker.PwmBlinkScheduler.whereis(gpio_pin) do
+      {:ok, _pid} = LedBlinker.PwmBlinkScheduler.change_period(gpio_pin, frequency, duty_cycle)
+    else
+      {:ok, _pid} =
+        LedBlinker.BlinkSupervisor.start_child(%{
           gpio_pin: gpio_pin,
           frequency: frequency,
           duty_cycle: duty_cycle,
-          turn_on_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_on() end,
-          turn_off_fn: fn -> gpio_pin |> LedControllerCache.get() |> LedController.turn_off() end
+          # Do not omit the module since the lambdas are called outside this module.
+          turn_on_fn: fn -> LedBlinker.turn_on(gpio_pin) end,
+          turn_off_fn: fn -> LedBlinker.turn_off(gpio_pin) end
         })
-
-      pid ->
-        GenServer.stop(pid)
-        blink(gpio_pin, frequency, duty_cycle)
     end
   end
 

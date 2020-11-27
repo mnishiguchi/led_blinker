@@ -11,7 +11,7 @@ defmodule LedBlinker.LedController do
 
   require Logger
 
-  @idle_timeout :timer.minutes(10)
+  @idle_timeout :timer.minutes(1)
 
   # Used as a unique process name.
   def via_tuple(gpio_pin) when is_number(gpio_pin) do
@@ -104,17 +104,6 @@ defmodule LedBlinker.LedController do
     {
       :noreply,
       %{state | switched_on: !switched_on},
-      @idle_timeout
-    }
-  end
-
-  @impl true
-  def terminate(_reason, %{gpio_ref: gpio_ref} = state) do
-    LedBlinker.GPIO.LED.turn_off(gpio_ref)
-
-    {
-      :noreply,
-      %{state | switched_on: false},
       @idle_timeout
     }
   end

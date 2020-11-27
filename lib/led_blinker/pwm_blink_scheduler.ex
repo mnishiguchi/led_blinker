@@ -13,16 +13,22 @@ defmodule LedBlinker.PwmBlinkScheduler do
           turn_on_fn: fn -> IO.puts("1") end,
           turn_off_fn: fn -> IO.puts("0") end
         })
-      # 1 # 80% of the period_duration
-      # 0 # 20% of the period_duration
-      # 1
+      # 1 # 80% of the period
+      # 0 # 20% of the period
       # ...
-      LedBlinker.Gpio.Pwm.stop(pid)
+
+      LedBlinker.PwmBlinkScheduler.change_period(19, 1, 50)
+      # 1 # 50% of the period
+      # 0 # 50% of the period
+      # ...
+
+      LedBlinker.PwmBlinkScheduler.stop(19)
       # :ok
 
   """
 
   use GenServer, restart: :temporary
+  require Logger
 
   # Used as a unique process name.
   def via_tuple(gpio_pin) when is_number(gpio_pin) do
@@ -36,21 +42,18 @@ defmodule LedBlinker.PwmBlinkScheduler do
     end
   end
 
-  def start_link(
-        %{
-          gpio_pin: gpio_pin,
-          frequency: frequency,
-          duty_cycle: duty_cycle,
-          turn_on_fn: turn_on_fn,
-          turn_off_fn: turn_off_fn
-        } = args
-      )
-      when is_number(gpio_pin) and
-             frequency in 1..100 and
-             duty_cycle in 0..100 and
-             is_function(turn_on_fn) and
-             is_function(turn_off_fn) do
-    GenServer.start_link(__MODULE__, args, name: via_tuple(gpio_pin))
+  def start_link(%{} = args)
+      when is_number(args.gpio_pin) and
+             args.frequency in 1..100 and
+             args.duty_cycle in 0..100 and
+             is_function(args.turn_on_fn) and
+             is_function(args.turn_off_fn) do
+    GenServer.start_link(__MODULE__, args, name: via_tuple(args.gpio_pin))
+  end
+
+  def change_period(gpio_pin, frequency, duty_cycle)
+      when frequency in 1..100 and duty_cycle in 0..100 do
+    GenServer.call(via_tuple(gpio_pin), {:change_period, frequency, duty_cycle})
   end
 
   def stop(gpio_pin) when is_number(gpio_pin) do
@@ -58,44 +61,47 @@ defmodule LedBlinker.PwmBlinkScheduler do
   end
 
   @impl true
-  def init(
-        %{
-          frequency: frequency,
-          duty_cycle: duty_cycle,
-          turn_on_fn: turn_on_fn,
-          turn_off_fn: turn_off_fn
-        } = args
-      ) do
-    period_duration = hz_to_period_duration_in_milliseconds(frequency)
-    on_time = round(period_duration * (duty_cycle / 100))
-    off_time = period_duration - on_time
+  def init(%{frequency: frequency, duty_cycle: duty_cycle} = args) do
+    initial_state = Map.merge(args, calculate_period(frequency, duty_cycle))
 
-    # Determine initial action. Do not generate pulse when on/off time is 0.
-    cond do
-      frequency == 0 -> turn_off_fn.()
-      on_time == 0 -> turn_off_fn.()
-      off_time == 0 -> turn_on_fn.()
-      true -> send(self(), :turn_on)
-    end
+    # Do nothing in duty_cycle if zero.
+    unless initial_state.duty_cycle == 0, do: send(self(), :turn_on_and_schedule_next)
 
-    {:ok,
-     Map.merge(args, %{period_duration: period_duration, on_time: on_time, off_time: off_time})}
+    Logger.info(initial_state)
+
+    {:ok, initial_state}
   end
 
-  # Fire now and schedule next.
   @impl true
-  def handle_info(:turn_on, %{turn_on_fn: turn_on_fn, on_time: on_time} = state) do
+  def handle_call({:change_period, frequency, duty_cycle}, _from, state) do
+    new_state = Map.merge(state, calculate_period(frequency, duty_cycle))
+
+    # Shut down if duty_cycle is zero.
+    if new_state.duty_cycle == 0, do: send(self(), :exit)
+
+    Logger.info(new_state)
+
+    {:reply, {:ok, self()}, new_state}
+  end
+
+  @impl true
+  def handle_info(:turn_on_and_schedule_next, state) do
+    %{turn_on_fn: turn_on_fn, on_time: on_time} = state
     turn_on_fn.()
-    Process.send_after(self(), :turn_off, on_time)
+    Process.send_after(self(), :turn_off_and_schedule_next, on_time)
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:turn_off, %{turn_off_fn: turn_off_fn, off_time: off_time} = state) do
+  def handle_info(:turn_off_and_schedule_next, state) do
+    %{turn_off_fn: turn_off_fn, period: period, on_time: on_time} = state
     turn_off_fn.()
-    Process.send_after(self(), :turn_on, off_time)
+    Process.send_after(self(), :turn_on_and_schedule_next, period - on_time)
     {:noreply, state}
   end
+
+  @impl true
+  def handle_info(:exit, state), do: {:stop, :normal, state}
 
   @impl true
   def terminate(_reason, %{turn_off_fn: turn_off_fn} = state) do
@@ -103,8 +109,18 @@ defmodule LedBlinker.PwmBlinkScheduler do
     {:noreply, state}
   end
 
-  # Converts frequency (Hz) to period_duration in milliseconds.
-  defp hz_to_period_duration_in_milliseconds(hz) when is_number(hz) do
-    LedBlinker.Frequency.to_period_duration(hz)
+  defp calculate_period(frequency, duty_cycle)
+       when frequency in 1..100 and duty_cycle in 0..100 do
+    period = round(1 / frequency * 1_000)
+
+    # The on/off time must be of integer type.
+    on_time = round(period * (duty_cycle / 100))
+
+    %{
+      frequency: frequency,
+      duty_cycle: duty_cycle,
+      period: period,
+      on_time: on_time
+    }
   end
 end

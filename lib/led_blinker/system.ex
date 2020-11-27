@@ -11,7 +11,8 @@ defmodule LedBlinker.System do
     Supervisor.init(
       [
         {LedBlinker.ProcessRegistry, nil},
-        {LedBlinker.LedControllerCache, nil}
+        {LedBlinker.LedControllerCache, nil},
+        {LedBlinker.BlinkSupervisor, nil}
       ],
       strategy: :one_for_one
     )
