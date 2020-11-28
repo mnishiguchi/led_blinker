@@ -13,7 +13,6 @@ defmodule LedBlinker.System do
         {Task.Supervisor, name: LedBlinker.TaskSupervisor},
         {LedBlinker.ProcessRegistry, nil},
         {LedBlinker.LedControllerCache, nil},
-        {LedBlinker.BlinkSupervisor, nil},
         {LedBlinker.SPI.PotentiometerSupervisor, nil}
       ],
       strategy: :one_for_one
