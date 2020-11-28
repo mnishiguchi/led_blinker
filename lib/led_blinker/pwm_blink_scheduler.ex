@@ -57,37 +57,35 @@ defmodule LedBlinker.PwmBlinkScheduler do
   end
 
   def stop(gpio_pin) when is_number(gpio_pin) do
-    if whereis(gpio_pin), do: GenServer.stop(via_tuple(gpio_pin))
+    if whereis(gpio_pin), do: gpio_pin |> via_tuple()|> GenServer.stop()
   end
 
   @impl true
-  def init(%{frequency: frequency, duty_cycle: duty_cycle} = args) do
+  def init(%{gpio_pin: gpio_pin, frequency: frequency, duty_cycle: duty_cycle} = args) do
     initial_state = Map.merge(args, calculate_period(frequency, duty_cycle))
 
     # Do nothing in duty_cycle if zero.
     unless initial_state.duty_cycle == 0, do: send(self(), :turn_on_and_schedule_next)
 
-    Logger.info(initial_state)
+    Logger.info("#{__MODULE__}.init: #{gpio_pin}")
 
     {:ok, initial_state}
   end
 
   @impl true
   def handle_call({:change_period, frequency, duty_cycle}, _from, state) do
+    %{gpio_pin: gpio_pin} = state
     new_state = Map.merge(state, calculate_period(frequency, duty_cycle))
 
-    # Shut down if duty_cycle is zero.
-    if new_state.duty_cycle == 0, do: send(self(), :exit)
-
-    Logger.info(new_state)
+    Logger.info("#{__MODULE__}.change_period: #{gpio_pin}")
 
     {:reply, {:ok, self()}, new_state}
   end
 
   @impl true
   def handle_info(:turn_on_and_schedule_next, state) do
-    %{turn_on_fn: turn_on_fn, on_time: on_time} = state
-    turn_on_fn.()
+    %{turn_off_fn: turn_off_fn, turn_on_fn: turn_on_fn, on_time: on_time} = state
+    if on_time == 0, do: turn_off_fn.(), else: turn_on_fn.()
     Process.send_after(self(), :turn_off_and_schedule_next, on_time)
     {:noreply, state}
   end
@@ -96,15 +94,15 @@ defmodule LedBlinker.PwmBlinkScheduler do
   def handle_info(:turn_off_and_schedule_next, state) do
     %{turn_off_fn: turn_off_fn, period: period, on_time: on_time} = state
     turn_off_fn.()
-    Process.send_after(self(), :turn_on_and_schedule_next, period - on_time)
+    off_time = period - on_time
+    Process.send_after(self(), :turn_on_and_schedule_next, off_time)
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:exit, state), do: {:stop, :normal, state}
+  def terminate(_reason, %{gpio_pin: gpio_pin, turn_off_fn: turn_off_fn} = state) do
+    Logger.info("#{__MODULE__}.terminate: #{gpio_pin}")
 
-  @impl true
-  def terminate(_reason, %{turn_off_fn: turn_off_fn} = state) do
     turn_off_fn.()
     {:noreply, state}
   end

@@ -5,37 +5,33 @@ This is my playground where I learn the basics of the IoT development using Nerv
 ## Usage
 
 ```ex
-gpio_pin = 12
-LedBlinker.turn_on(gpio_pin)
-LedBlinker.turn_off(gpio_pin)
-LedBlinker.toggle(gpio_pin)
-```
+LedBlinker.turn_on(12)
+LedBlinker.turn_off(12)
+LedBlinker.toggle(12)
 
-```ex
-gpio_pin = 12
-LedBlinker.blink(gpio_pin, 1000)
-LedBlinker.stop_blink(gpio_pin)
-```
+LedBlinker.blink(12)
+LedBlinker.stop_blink(12)
 
-```ex
-gpio_pin = 12
-LedBlinker.pwm(gpio_pin, 80)
-LedBlinker.stop_pwm(gpio_pin)
-```
+LedBlinker.brightness(12, 80)
+LedBlinker.stop_blink(12)
 
-```ex
-[12, 13, 19] |> Enum.shuffle |> Enum.map(fn gpio_pin ->
+# Flash three LEDs one after another by increasing and decreasing the brightness
+# linearly.
+[12, 13, 19] |> Enum.map(fn gpio_pin ->
   Task.start_link(fn ->
     Enum.to_list(1..10) ++ Enum.to_list(9..0)
     |> Enum.map(fn x -> x * 10 end)
     |> Enum.map(fn level ->
       LedBlinker.brightness(gpio_pin, level)
-      :timer.sleep(499)
+      :timer.sleep(99)
     end)
   end)
 
-  :timer.sleep(10_000)
+  :timer.sleep(2000)
 end)
+
+LedBlinker.potentiometer(12)
+LedBlinker.stop_potentiometer(12)
 ```
 
 ## Targets

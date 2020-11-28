@@ -41,6 +41,8 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def init(gpio_pin) do
+    Logger.info("#{__MODULE__}.init: #{gpio_pin}")
+
     # Initialize later so we can avoid blocking the caller.
     send(self(), {:initialize_state, gpio_pin})
     {:ok, nil, @idle_timeout}
@@ -63,7 +65,7 @@ defmodule LedBlinker.LedController do
 
   @impl true
   def handle_info(:timeout, %{gpio_pin: gpio_pin} = state) do
-    Logger.info("Timeout #{__MODULE__}:#{gpio_pin}")
+    Logger.info("#{__MODULE__}.timeout: #{gpio_pin}")
 
     {:stop, :normal, {state, @idle_timeout}}
   end

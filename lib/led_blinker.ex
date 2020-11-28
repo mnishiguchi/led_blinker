@@ -12,8 +12,10 @@ defmodule LedBlinker do
       LedBlinker.stop_blink(12)
 
       LedBlinker.brightness(12, 80)
+      LedBlinker.stop_blink(12)
 
       LedBlinker.potentiometer(12)
+      LedBlinker.stop_potentiometer(12)
 
   """
 
@@ -53,7 +55,7 @@ defmodule LedBlinker do
     LedBlinker.turn_off(gpio_pin)
   end
 
-  def brightness(gpio_pin, percentage) when percentage in 0..100 do
+  def brightness(gpio_pin, percentage) when is_integer(percentage) and percentage in 0..100 do
     # 100Hz (period duration: ~10ms) is fast enough.
     LedBlinker.blink(gpio_pin, 100, percentage)
   end
@@ -64,10 +66,19 @@ defmodule LedBlinker do
         LedBlinker.SPI.PotentiometerSupervisor.start_child(%{
           gpio_pin: gpio_pin,
           on_scan_fn: fn percentage ->
-            Logger.info("#{round(percentage)}")
-            LedBlinker.brightness(gpio_pin, round(percentage))
+            try do
+              LedBlinker.brightness(gpio_pin, round(percentage))
+            rescue
+              e in FunctionClauseError -> Logger.error(inspect(e))
+            else
+              _ -> Logger.info(inspect(percentage))
+            end
           end
         })
     end
+  end
+
+  def stop_potentiometer(gpio_pin) do
+    LedBlinker.SPI.Potentiometer.stop(gpio_pin)
   end
 end

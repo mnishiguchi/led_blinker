@@ -6,18 +6,20 @@ defmodule LedBlinker.SPI.Potentiometer do
 
       alias LedBlinker.SPI.Potentiometer
       on_scan_fn = fn (value) -> IO.inspect(value) end
+
       {:ok, pid} =
         LedBlinker.SPI.Potentiometer.start_link(%{
           gpio_pin: 12,
           on_scan_fn: fn (value) -> IO.inspect(value) end
         })
+
       LedBlinker.SPI.Potentiometer.stop(12)
 
   """
 
   # https://hexdocs.pm/elixir/GenServer.html
   use GenServer, restart: :temporary
-
+  require Logger
   import LedBlinker.Utils
 
   @spi_bus_name "spidev0.0"
@@ -43,11 +45,13 @@ defmodule LedBlinker.SPI.Potentiometer do
   end
 
   def stop(gpio_pin) when is_number(gpio_pin) do
-    if whereis(gpio_pin), do: GenServer.stop(via_tuple(gpio_pin))
+    if whereis(gpio_pin), do: gpio_pin |> via_tuple()|> GenServer.stop()
   end
 
   @impl true
   def init(args) do
+    Logger.info("#{__MODULE__}.init: #{inspect(args)}")
+
     {:ok, spi_ref} = Circuits.SPI.open(@spi_bus_name)
     send(self(), :tick)
 
