@@ -37,6 +37,7 @@ defmodule LedBlinker.MixProject do
       {:toolshed, "~> 0.2.13"},
       {:circuits_gpio, "~> 0.4"},
       {:circuits_spi, "~> 0.1"},
+      {:circuits_i2c, "~> 0.1"},
 
       # Dependencies for all targets except :host
       {:nerves_runtime, "~> 0.11.3", targets: @all_targets},
