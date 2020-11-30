@@ -3,27 +3,30 @@ defmodule ExLCD do
   **ExLCD** implements a standard API for controlling and
   displaying text on character matrix LCD display modules. ExLCD
   handles most modes and operations supported by common display modules.
+
   ExLCD controls an assortment of displays by interacting with a
   driver module implementing the ExLCD.Driver behaviour.
   ExLCD has no direct support for controlling hardware and instead
   delegates low-level functions driver modules for the actual device.
+
   ## Usage
+
   ExLCD is implemented as a GenServer. Start it by calling
   ExLCD.start_link/1 and passing a tuple containing the
   name of the driver module in the first element and a map of
   configuration parameters in second element. See the driver module
   documentation for what configuration parameters it accepts.
+
   Example:
   ```elixir
     alias ExLCD
     ExLCD.start_link({ExLCD.HD44780, %{...}})
   ```
-
-  https://github.com/taorg/ex_lcd/blob/439096fefc4488a18402cf03f0bb39efa5a6c91b/lib/ex_lcd.ex
   """
   use GenServer
 
-  @type feature :: :display | :cursor | :blink | :autoscroll | :rtl_text | :ltr_text
+  @type feature :: :display | :cursor | :blink | :autoscroll |
+                   :rtl_text | :ltr_text
   @type bitmap :: list
 
   defmodule LCDState do
@@ -32,9 +35,11 @@ defmodule ExLCD do
 
   @doc """
   Start the ExLCD GenServer to manage the display.
+
   Pass a tuple containing the name of the driver module in the first element
   and a map of configuration parameters in second element. See the driver
   module documentation for what configuration parameters it accepts.
+
   Example:
   ```elixir
     alias ExLCD
@@ -61,6 +66,7 @@ defmodule ExLCD do
 
   @doc """
   Clear the display.
+
     Example:
     ```elixir
       iex> ExLCD.clear
@@ -72,6 +78,7 @@ defmodule ExLCD do
 
   @doc """
   Home the cursor position to row 0, col 0
+
     Example:
     ```elixir
       iex> ExLCD.home
@@ -83,17 +90,19 @@ defmodule ExLCD do
 
   @doc """
   Position the cursor at a specified row and colum
+
     Example:
     ```elixir
       iex> ExLCD.move_to(2, 12)
       :ok
     ```
   """
-  @spec move_to(row :: integer, col :: integer) :: :ok
+  @spec move_to(row::integer, col::integer) :: :ok
   def move_to(row, col), do: cast({:set_cursor, row, col})
 
   @doc """
   Write a string or charlist to the display at the current cursor position.
+
   Example:
   ```elixir
     iex> ExLCD.write("ExLCD!")
@@ -108,11 +117,11 @@ defmodule ExLCD do
   def write(content) when is_binary(content) do
     cast({:print, content})
   end
-
   def write(content), do: cast({:write, content})
 
   @doc """
   Scroll the display contents left by 1 or some number of columns.
+
   Example:
   ```elixir
     iex> ExLCD.scroll_right(6)
@@ -124,6 +133,7 @@ defmodule ExLCD do
 
   @doc """
   Scroll the display contents right by 1 or some number of columns.
+
     Example:
     ```elixir
       iex> ExLCD.scroll_right(6)
@@ -136,6 +146,7 @@ defmodule ExLCD do
   @doc """
   Move the cursor 1 or some number of columns to the left of its current
   position.
+
     Example:
     ```elixir
       iex> ExLCD.move_left(4)
@@ -148,6 +159,7 @@ defmodule ExLCD do
   @doc """
   Move the cursor 1 or some number of columns to the right of its current
   position.
+
     Example:
     ```elixir
       iex> ExLCD.move_right(1)
@@ -159,12 +171,14 @@ defmodule ExLCD do
 
   @doc """
   Program a custom character glyph.
+
   Custom glyphs may not be supported by all displays. Check the driver
   to see if it is on yours. Pass a custome character index or slot
   number and a list of integers representing the glyph bitmap data. Format
   of the bitmap data and the numbering of the character slots is highly
   dependent on the display controller. Refer to the driver module for
   details.
+
     Example:
     ```elixir
       iex> ExLCD.create_char(0, [0x7F, 0x7F, 0x7F, 0x7F,
@@ -177,6 +191,7 @@ defmodule ExLCD do
 
   @doc """
   Enable a display feature.
+
     Example:
     ```elixir
       iex> ExLCD.enable(:display)
@@ -193,6 +208,7 @@ defmodule ExLCD do
 
   @doc """
   Disable a display feature.
+
     Example:
     ```elixir
       iex> ExLCD.disable(:blink)
@@ -209,6 +225,7 @@ defmodule ExLCD do
 
   @doc """
   Stop the driver and release hardware resources.
+
   Example:
   ```elixir
     iex> ExLCD.stop
@@ -224,39 +241,30 @@ defmodule ExLCD do
   @doc false
   def handle_cast(:clear, state), do: execute({:clear, []}, state)
   def handle_cast(:home, state), do: execute({:home, []}, state)
-
   def handle_cast({:set_cursor, row, col}, state) do
     execute({:set_cursor, {row, col}}, state)
   end
-
   def handle_cast({:print, content}, state) do
     execute({:print, content}, state)
   end
-
   def handle_cast({:write, content}, state) do
     execute({:write, content}, state)
   end
-
   def handle_cast({:scroll, cols}, state) do
     execute({:scroll, cols}, state)
   end
-
   def handle_cast({:right, cols}, state) do
     execute({:right, cols}, state)
   end
-
   def handle_cast({:left, cols}, state) do
     execute({:left, cols}, state)
   end
-
   def handle_cast({:char, idx, bitmap}, state) when idx in 0..7 and length(bitmap) === 8 do
     execute({:char, idx, bitmap}, state)
   end
-
   def handle_cast({:enable, feature}, state) do
     execute({feature, :on}, state)
   end
-
   def handle_cast({:disable, feature}, state) do
     execute({feature, :off}, state)
   end

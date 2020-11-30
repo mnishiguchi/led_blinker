@@ -9,7 +9,7 @@ defmodule LedBlinker.MixProject do
     [
       app: @app,
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       archives: [nerves_bootstrap: "~> 1.10"],
       start_permanent: Mix.env() == :prod,
       build_embedded: true,
@@ -23,7 +23,7 @@ defmodule LedBlinker.MixProject do
   def application do
     [
       mod: {LedBlinker.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
     ]
   end
 
@@ -38,11 +38,15 @@ defmodule LedBlinker.MixProject do
       {:circuits_gpio, "~> 0.4"},
       {:circuits_spi, "~> 0.1"},
       {:circuits_i2c, "~> 0.1"},
+      # {:ex_lcd,
+      #  git: "https://github.com/mnishiguchi/ex_lcd.git",
+      #  branch: "mnishiguchi/elixir-circuits",
+      #  targets: @all_targets},
 
       # Dependencies for all targets except :host
       {:nerves_runtime, "~> 0.11.3", targets: @all_targets},
       {:nerves_pack, "~> 0.4.0", targets: @all_targets},
-      {:pigpiox, "~> 0.1",
+      {:pigpiox,
        git: "https://github.com/mnishiguchi/pigpiox.git",
        branch: "mnishiguchi/pwm",
        targets: @all_targets},

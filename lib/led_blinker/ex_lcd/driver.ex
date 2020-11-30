@@ -3,14 +3,13 @@ defmodule ExLCD.Driver do
   ExLCD.Driver defines the behaviour expected of display driver
   modules. Each display driver module must use this module and implement the
   expected callback functions.
+
     ```elixir
     defmodule MyDisplayDriver do
       use ExLCD.Driver
       ...
     end
     ```
-
-  https://github.com/taorg/ex_lcd/blob/439096fefc4488a18402cf03f0bb39efa5a6c91b/lib/ex_lcd/driver.ex
   """
   @doc false
   defmacro __using__(_) do
@@ -24,20 +23,17 @@ defmodule ExLCD.Driver do
   # Redefine defp when testing to expose private functions
   @doc false
   defmacro defp(definition, do: body) do
-    case Mix.env() do
-      :test ->
-        quote do
-          Kernel.def unquote(definition) do
-            unquote(body)
-          end
+    case Mix.env do
+      :test -> quote do
+        Kernel.def(unquote(definition)) do
+          unquote(body)
         end
-
-      _ ->
-        quote do
-          Kernel.defp unquote(definition) do
-            unquote(body)
-          end
+      end
+      _ -> quote do
+        Kernel.defp(unquote(definition)) do
+          unquote(body)
         end
+      end
     end
   end
 
